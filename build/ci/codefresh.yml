@@ -1,0 +1,13 @@
+version: "1.0"
+
+stages:
+  - release
+
+steps:
+  release:
+    type: github-release
+    stage: release
+    title: Creating GitHub release
+    arguments:
+      release_name: ${{CF_BRANCH}}
+      release_tag: ${{CF_BRANCH}}
