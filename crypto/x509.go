@@ -32,7 +32,9 @@ func NewCertificatePool(emptyPool bool, ctx context.Context) (*CertificatePool, 
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	if emptyPool {
 		return &CertificatePool{
@@ -59,7 +61,9 @@ func (p *CertificatePool) AddPEMCertificatesFromFile(file string, ctx context.Co
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -96,7 +100,9 @@ func ValidateCertificate(cert *x509.Certificate, roots *CertificatePool, interme
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	if cert == nil {
 		err := errors.New("no certificate was provided")
@@ -143,7 +149,9 @@ func NewSelfSignedCertificateKeyPair(template *x509.Certificate, keyBits int, ct
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	// generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, keyBits)

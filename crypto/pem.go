@@ -76,7 +76,9 @@ func DecodePEMBlockFromFile(file string, ctx context.Context) (*pem.Block, error
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -108,7 +110,9 @@ func DecryptPEMBlock(b *pem.Block, password []byte, ctx context.Context) ([]byte
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	if b == nil {
 		err := errors.New("PEM block is nil")
@@ -211,7 +215,9 @@ func EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte, al
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	ciph := cipherByKey(alg)
 	if ciph == nil {
@@ -273,7 +279,9 @@ func ParsePEMCertificateBytes(contents []byte, ctx context.Context) ([]*x509.Cer
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	if contents == nil {
 		err := errors.New("no content was provided")
@@ -307,7 +315,9 @@ func ParsePEMCertificateFile(file string, ctx context.Context) ([]*x509.Certific
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -329,7 +339,9 @@ func ParsePEMPrivateKeyBytes(contents []byte, password []byte, ctx context.Conte
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	if contents == nil {
 		err := errors.New("no content was provided")
@@ -379,7 +391,9 @@ func ParsePEMPrivateKeyFile(file string, password []byte, ctx context.Context) (
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().Logger()
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {

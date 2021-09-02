@@ -57,7 +57,10 @@ func (w *ConditionalWaiter) Run(ctx context.Context) {
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
+	logger = logger.With().
 		Str("kind", w.resource.gvk.Kind).
 		Str("group", w.resource.gvk.Group).
 		Str("version", w.resource.gvk.Version).Logger()
@@ -159,7 +162,10 @@ func (w *ConditionalWaiter) waitForObject(name string, wg *sync.WaitGroup, ctx c
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	logger = logger.With().PackageCaller().
+	if logger.IsDebugEnabled() {
+		logger = logger.With().PackageCaller().Logger()
+	}
+	logger = logger.With().
 		Str("kind", w.resource.gvk.Kind).
 		Str("group", w.resource.gvk.Group).
 		Str("version", w.resource.gvk.Version).
