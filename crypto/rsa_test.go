@@ -1,6 +1,7 @@
 package crypto_test
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -71,10 +72,11 @@ C+tcrjo+xjaA+wZTimyQZb+yYT/kPQPEDvdvUE5QoKUX
 
 func TestParsePublicKeyFromCertificateFailure(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
+	ctx := context.TODO()
 
 	t.Log("*** testing nil certificate ***")
 	expected := "no certificate was provided"
-	_, err := crypto.ParsePublicKeyFromCertificate(nil)
+	_, err := crypto.ParsePublicKeyFromCertificate(nil, ctx)
 	if err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
@@ -88,7 +90,7 @@ func TestParsePublicKeyFromCertificateFailure(t *testing.T) {
 
 	t.Log("*** testing invalid public key format ***")
 	expected = "public key does not appear to be in RSA format"
-	_, err = crypto.ParsePublicKeyFromCertificate(&x509.Certificate{})
+	_, err = crypto.ParsePublicKeyFromCertificate(&x509.Certificate{}, ctx)
 	if err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
@@ -103,10 +105,11 @@ func TestParsePublicKeyFromCertificateFailure(t *testing.T) {
 
 func TestSignFailure(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
+	ctx := context.TODO()
 
 	t.Log("*** testing nil contents ***")
 	expected := "no content was provided"
-	_, err := crypto.Sign(nil, nil)
+	_, err := crypto.Sign(nil, nil, ctx)
 	if err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
@@ -120,7 +123,7 @@ func TestSignFailure(t *testing.T) {
 
 	t.Log("*** testing nil private key ***")
 	expected = "no private key was provided"
-	_, err = crypto.Sign([]byte(TestContents), nil)
+	_, err = crypto.Sign([]byte(TestContents), nil, ctx)
 	if err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
@@ -139,7 +142,7 @@ func TestSignFailure(t *testing.T) {
 	}
 	privateKey.D = big.NewInt(1024)
 	privateKey.PublicKey.E = 12
-	_, err = crypto.Sign([]byte(TestContents), privateKey)
+	_, err = crypto.Sign([]byte(TestContents), privateKey, ctx)
 	if err == nil {
 		t.Errorf("error: got nil, expected error")
 	} else {
@@ -149,6 +152,7 @@ func TestSignFailure(t *testing.T) {
 
 func TestSignVerifyFailure(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
+	ctx := context.TODO()
 	t.Log("** testing sign/verify failure ***")
 
 	// generate a random private key
@@ -170,7 +174,7 @@ func TestSignVerifyFailure(t *testing.T) {
 	} else {
 		t.Log("  parsed PKCS1 public key from PEM block")
 	}
-	publicKey, err := crypto.ParsePublicKeyFromCertificate(cert)
+	publicKey, err := crypto.ParsePublicKeyFromCertificate(cert, ctx)
 	if err != nil {
 		t.Fatalf("error: certificate does not appear to be an RSA public key")
 	} else {
@@ -178,7 +182,7 @@ func TestSignVerifyFailure(t *testing.T) {
 	}
 
 	// sign the contents
-	signature, err := crypto.Sign([]byte(TestContents), privateKey)
+	signature, err := crypto.Sign([]byte(TestContents), privateKey, ctx)
 	if err != nil {
 		t.Fatalf("error: failed to generate signature: %s", err.Error())
 	} else {
@@ -186,7 +190,7 @@ func TestSignVerifyFailure(t *testing.T) {
 	}
 
 	// verify the signature
-	if err := crypto.Verify([]byte(TestContents), signature, publicKey); err == nil {
+	if err := crypto.Verify([]byte(TestContents), signature, publicKey, ctx); err == nil {
 		t.Fatalf("error: expected error, got nil")
 	}
 	t.Log("  signature verification failed as expected")
@@ -194,8 +198,8 @@ func TestSignVerifyFailure(t *testing.T) {
 }
 
 func TestSignVerifySuccess(t *testing.T) {
-	zerolog.SetGlobalLevel(zerolog.Disabled)
-	t.Log("** testing sign/verify success ***")
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	ctx := context.TODO()
 
 	// parse the private key
 	block, _ := pem.Decode([]byte(SigningKey))
@@ -224,7 +228,7 @@ func TestSignVerifySuccess(t *testing.T) {
 	} else {
 		t.Log("  parsed PKCS1 public key from PEM block")
 	}
-	publicKey, err := crypto.ParsePublicKeyFromCertificate(cert)
+	publicKey, err := crypto.ParsePublicKeyFromCertificate(cert, ctx)
 	if err != nil {
 		t.Fatalf("error: certificate does not appear to be an RSA public key")
 	} else {
@@ -232,7 +236,7 @@ func TestSignVerifySuccess(t *testing.T) {
 	}
 
 	// sign the contents
-	signature, err := crypto.Sign([]byte(TestContents), key)
+	signature, err := crypto.Sign([]byte(TestContents), key, ctx)
 	if err != nil {
 		t.Fatalf("error: failed to generate signature: %s", err.Error())
 	} else {
@@ -240,7 +244,7 @@ func TestSignVerifySuccess(t *testing.T) {
 	}
 
 	// verify the signature
-	if err := crypto.Verify([]byte(TestContents), signature, publicKey); err != nil {
+	if err := crypto.Verify([]byte(TestContents), signature, publicKey, ctx); err != nil {
 		t.Fatalf("error: failed to verify signature: %s", err.Error())
 	}
 	t.Log("  signature is verified")
@@ -249,6 +253,7 @@ func TestSignVerifySuccess(t *testing.T) {
 
 func TestVerifyFailure(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
+	ctx := context.TODO()
 
 	t.Log("*** loading public key ***")
 	block, _ := pem.Decode([]byte(SigningCertificate))
@@ -263,7 +268,7 @@ func TestVerifyFailure(t *testing.T) {
 	} else {
 		t.Log("  parsed PKCS1 public key from PEM block")
 	}
-	publicKey, err := crypto.ParsePublicKeyFromCertificate(cert)
+	publicKey, err := crypto.ParsePublicKeyFromCertificate(cert, ctx)
 	if err != nil {
 		t.Fatalf("error: certificate does not appear to be an RSA public key")
 	} else {
@@ -272,7 +277,7 @@ func TestVerifyFailure(t *testing.T) {
 
 	t.Log("*** testing nil contents ***")
 	expected := "no content was provided"
-	if err := crypto.Verify(nil, nil, nil); err == nil {
+	if err := crypto.Verify(nil, nil, nil, ctx); err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
 		errMsg := err.Error()
@@ -285,7 +290,7 @@ func TestVerifyFailure(t *testing.T) {
 
 	t.Log("*** testing nil signature ***")
 	expected = "no signature was provided"
-	if err := crypto.Verify([]byte(TestContents), nil, nil); err == nil {
+	if err := crypto.Verify([]byte(TestContents), nil, nil, ctx); err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
 		errMsg := err.Error()
@@ -298,7 +303,7 @@ func TestVerifyFailure(t *testing.T) {
 
 	t.Log("*** testing nil public key ***")
 	expected = "no public key was provided"
-	if err := crypto.Verify([]byte(TestContents), []byte{}, nil); err == nil {
+	if err := crypto.Verify([]byte(TestContents), []byte{}, nil, ctx); err == nil {
 		t.Errorf("error: got nil, expected %s", expected)
 	} else {
 		errMsg := err.Error()
@@ -310,7 +315,7 @@ func TestVerifyFailure(t *testing.T) {
 	}
 
 	t.Log("*** testing invalid signature ***")
-	if err := crypto.Verify([]byte(TestContents), []byte{}, publicKey); err == nil {
+	if err := crypto.Verify([]byte(TestContents), []byte{}, publicKey, ctx); err == nil {
 		t.Errorf("error: got nil, expected error")
 	} else {
 		t.Logf("success - error was %s", err.Error())

@@ -8,7 +8,7 @@ and utilizes [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0
 
 No unreleased changes
 
-## v0.1.0 (TODO: CHANGE ME)
+## v0.1.0 (2021-09-01)
 
 ### Notes
 
