@@ -27,9 +27,6 @@ func NewPGPKeyPair(name, email, keyType string, bits int, ctx context.Context) (
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 	kp := &PGPKeyPair{}
 
 	// generate a new key
@@ -66,9 +63,6 @@ func NewPGPKeyPairFromArmor(armoredKey, passphrase string, ctx context.Context) 
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 	kp := &PGPKeyPair{
 		armoredKey: armoredKey,
@@ -119,9 +113,6 @@ func (kp *PGPKeyPair) GetArmoredPrivateKey(ctx context.Context) (string, error) 
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 
 	if kp.armoredKey == "" {
 		err := fmt.Errorf("private key has not been initialized")
@@ -139,9 +130,6 @@ func (kp *PGPKeyPair) GetArmoredPublicKey(ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	if kp.privateKey == nil { // should never happen

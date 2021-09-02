@@ -113,9 +113,6 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 	logger = logger.With().Str("method", method).Str("url", url).Logger()
 
 	// parse the URL passed in
@@ -199,9 +196,6 @@ func (c *Client) doRequest(method string, url string, headers map[string]string,
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 	logger = logger.With().Str("method", method).Str("url", url).Logger()
 
 	// create the request
@@ -238,9 +232,6 @@ func (c *Client) parseResponse(resp *http.Response, ctx context.Context) (*http.
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)

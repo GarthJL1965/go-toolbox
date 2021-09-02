@@ -24,9 +24,6 @@ func DecryptString(ciphertext, key string, ctx context.Context) (string, error) 
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 
 	// decode the Base64-encoded string
 	data, err := base64.StdEncoding.DecodeString(ciphertext)
@@ -100,9 +97,6 @@ func EncryptString(plaintext, key string, ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	// generate a random key if needed

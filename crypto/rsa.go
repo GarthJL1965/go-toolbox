@@ -22,9 +22,6 @@ func ParsePublicKeyFromCertificate(cert *x509.Certificate, ctx context.Context) 
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 
 	// validate paramaters
 	if cert == nil {
@@ -56,9 +53,6 @@ func Sign(contents []byte, privateKey *rsa.PrivateKey, ctx context.Context) ([]b
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	// validate parameters
@@ -100,9 +94,6 @@ func Verify(contents, signature []byte, publicKey *rsa.PublicKey, ctx context.Co
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	// validate parameters

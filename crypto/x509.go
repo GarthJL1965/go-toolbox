@@ -32,9 +32,6 @@ func NewCertificatePool(emptyPool bool, ctx context.Context) (*CertificatePool, 
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
-	}
 
 	if emptyPool {
 		return &CertificatePool{
@@ -60,9 +57,6 @@ func (p *CertificatePool) AddPEMCertificatesFromFile(file string, ctx context.Co
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	contents, err := ioutil.ReadFile(file)
@@ -99,9 +93,6 @@ func ValidateCertificate(cert *x509.Certificate, roots *CertificatePool, interme
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	if cert == nil {
@@ -148,9 +139,6 @@ func NewSelfSignedCertificateKeyPair(template *x509.Certificate, keyBits int, ct
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
-	}
-	if logger.IsDebugEnabled() {
-		logger = logger.With().PackageCaller().Logger()
 	}
 
 	// generate private key
