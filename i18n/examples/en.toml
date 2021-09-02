@@ -1,0 +1,32 @@
+[plain-message]
+description = "A sample plain message"
+locale = "en"
+override = false
+type = "plain" # type is not required when it's a plain message
+other = "The request completed successfully."
+
+[cardinal-message]
+description = "A sample cardinal rule message"
+locale = "en"
+override = false
+type = "cardinal"
+one = "You have {0} day of vacation remaining."
+other = "You have {0} days of vacation remaining."
+
+[ordinal-message]
+description = "A sample ordinal rule message"
+locale = "en"
+override = false
+type = "ordinal"
+one = "This is the {0}st day of the month."
+two = "This is the {0}nd day of the month."
+few = "This is the {0}rd day of the month."
+other = "This is the {0}th day of the month."
+
+[range-message]
+description = "A sample range rule message"
+locale = "en"
+override = false
+type = "range"
+one = "There is {0}-{1} day left in the month."
+other = "There are {0}-{1} days left in the month."
