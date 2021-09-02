@@ -147,7 +147,7 @@ func (ut *UniversalTranslator) ImportFromReader(reader io.Reader) error {
 			if err := locale.Add(key, t.Other, t.OverrideExisting); err != nil {
 				return err
 			}
-			return nil
+			continue
 		case RuleTypeCardinal:
 			addFn = locale.AddCardinal
 		case RuleTypeOrdinal:
@@ -165,27 +165,27 @@ func (ut *UniversalTranslator) ImportFromReader(reader io.Reader) error {
 			}
 		}
 		if t.One != "" {
-			if err := addFn(key, t.Zero, locales.PluralRuleOne, t.OverrideExisting); err != nil {
+			if err := addFn(key, t.One, locales.PluralRuleOne, t.OverrideExisting); err != nil {
 				return err
 			}
 		}
 		if t.Two != "" {
-			if err := addFn(key, t.Zero, locales.PluralRuleTwo, t.OverrideExisting); err != nil {
+			if err := addFn(key, t.Two, locales.PluralRuleTwo, t.OverrideExisting); err != nil {
 				return err
 			}
 		}
 		if t.Few != "" {
-			if err := addFn(key, t.Zero, locales.PluralRuleFew, t.OverrideExisting); err != nil {
+			if err := addFn(key, t.Few, locales.PluralRuleFew, t.OverrideExisting); err != nil {
 				return err
 			}
 		}
 		if t.Many != "" {
-			if err := addFn(key, t.Zero, locales.PluralRuleMany, t.OverrideExisting); err != nil {
+			if err := addFn(key, t.Many, locales.PluralRuleMany, t.OverrideExisting); err != nil {
 				return err
 			}
 		}
 		if t.Other != "" {
-			if err := addFn(key, t.Zero, locales.PluralRuleOther, t.OverrideExisting); err != nil {
+			if err := addFn(key, t.Other, locales.PluralRuleOther, t.OverrideExisting); err != nil {
 				return err
 			}
 		}

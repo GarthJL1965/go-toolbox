@@ -28,5 +28,4 @@ description = "A sample range rule message"
 locale = "en"
 override = false
 type = "range"
-one = "There is {0}-{1} day left in the month."
 other = "There are {0}-{1} days left in the month."
