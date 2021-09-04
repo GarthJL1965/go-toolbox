@@ -4,21 +4,21 @@ import (
 	"strings"
 
 	"github.com/go-playground/locales"
+	ut "github.com/go-playground/universal-translator"
 )
 
-// UniversalTranslator holds all locale & translation data
+// UniversalTranslator holds all locale & translation data.
 type UniversalTranslator struct {
-	translators map[string]Translator
-	fallback    Translator
+	translators map[string]ut.Translator
+	fallback    ut.Translator
 }
 
-// New returns a new UniversalTranslator instance set with
-// the fallback locale and locales it should support
+// New returns a new UniversalTranslator instance set with the fallback locale and locales it should support.
 func NewUniversalTranslator(fallback locales.Translator,
 	supportedLocales ...locales.Translator) *UniversalTranslator {
 
 	t := &UniversalTranslator{
-		translators: make(map[string]Translator),
+		translators: make(map[string]ut.Translator),
 	}
 
 	for _, v := range supportedLocales {
@@ -38,10 +38,9 @@ func NewUniversalTranslator(fallback locales.Translator,
 	return t
 }
 
-// FindTranslator trys to find a Translator based on an array of locales
-// and returns the first one it can find, otherwise returns the
-// fallback translator.
-func (t *UniversalTranslator) FindTranslator(locales ...string) (trans Translator, found bool) {
+// FindTranslator trys to find a Translator based on an array of locales and returns the first one it can find,
+// otherwise returns the fallback translator.
+func (t *UniversalTranslator) FindTranslator(locales ...string) (trans ut.Translator, found bool) {
 
 	for _, locale := range locales {
 
@@ -53,9 +52,8 @@ func (t *UniversalTranslator) FindTranslator(locales ...string) (trans Translato
 	return t.fallback, false
 }
 
-// GetTranslator returns the specified translator for the given locale,
-// or fallback if not found
-func (t *UniversalTranslator) GetTranslator(locale string) (trans Translator, found bool) {
+// GetTranslator returns the specified translator for the given locale or fallback if not found.
+func (t *UniversalTranslator) GetTranslator(locale string) (trans ut.Translator, found bool) {
 
 	if trans, found = t.translators[strings.ToLower(locale)]; found {
 		return
@@ -64,21 +62,25 @@ func (t *UniversalTranslator) GetTranslator(locale string) (trans Translator, fo
 	return t.fallback, false
 }
 
-// GetFallback returns the fallback locale
-func (t *UniversalTranslator) GetFallback() Translator {
+// GetFallback returns the fallback locale.
+func (t *UniversalTranslator) GetFallback() ut.Translator {
 	return t.fallback
 }
 
-// AddTranslator adds the supplied translator, if it already exists the override param
-// will be checked and if false an error will be returned, otherwise the translator will be
-// overridden; if the fallback matches the supplied translator it will be overridden as well
-// NOTE: this is normally only used when translator is embedded within a library
+// AddTranslator adds the supplied translator.
+//
+// If it already exists the override param will be checked and if false an error will be returned. Otherwise the
+// translator will be overridden. If the fallback matches the supplied translator, it will be overridden as well.
+// NOTE: This is normally only used when translator is embedded within a library.
+//
+// The following errors are returned by this function:
+// ErrExistingTranslator
 func (t *UniversalTranslator) AddTranslator(translator locales.Translator, override bool) error {
 
 	lc := strings.ToLower(translator.Locale())
 	_, ok := t.translators[lc]
 	if ok && !override {
-		return &ErrExistingTranslator{locale: translator.Locale()}
+		return &ErrExistingTranslator{Locale: translator.Locale()}
 	}
 
 	trans := newTranslator(translator)
@@ -88,7 +90,7 @@ func (t *UniversalTranslator) AddTranslator(translator locales.Translator, overr
 		// because it's optional to have a fallback, I don't impose that limitation
 		// don't know why you wouldn't but...
 		if !override {
-			return &ErrExistingTranslator{locale: translator.Locale()}
+			return &ErrExistingTranslator{Locale: translator.Locale()}
 		}
 
 		t.fallback = trans
@@ -99,8 +101,10 @@ func (t *UniversalTranslator) AddTranslator(translator locales.Translator, overr
 	return nil
 }
 
-// VerifyTranslations runs through all locales and identifies any issues
-// eg. missing plural rules for a locale
+// VerifyTranslations runs through all locales and identifies any issues.
+//
+// The following errors are returned by this function:
+// any error from the translator's VerifyTranslations() function
 func (t *UniversalTranslator) VerifyTranslations() (err error) {
 
 	for _, trans := range t.translators {

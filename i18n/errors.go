@@ -1,157 +1,291 @@
 package i18n
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/go-playground/locales"
 )
 
-var (
-	// ErrUnknowTranslation indicates the translation could not be found
-	ErrUnknowTranslation = errors.New("unknown translation")
+// Object error codes (1501-1750)
+const (
+	ErrKeyIsNotStringCode           = 1501
+	ErrUnknownTranslationCode       = 1502
+	ErrExistingTranslatorCode       = 1503
+	ErrConflictingTranslationCode   = 1504
+	ErrRangeTranslationCode         = 1505
+	ErrOrdinalTranslationCode       = 1506
+	ErrCardinalTranslationCode      = 1507
+	ErrMissingPluralTranslationCode = 1508
+	ErrMissingBraceCode             = 1509
+	ErrBadParamSyntaxCode           = 1510
+	ErrLocaleNotRegisteredCode      = 1511
+	ErrInvalidRuleTypeCode          = 1512
+	ErrExportPathFailureCode        = 1513
+	ErrExportWriteFailureCode       = 1514
+	ErrImportPathFailureCode        = 1515
+	ErrImportReadFailureCode        = 1516
 )
 
-var _ error = new(ErrConflictingTranslation)
-var _ error = new(ErrRangeTranslation)
-var _ error = new(ErrOrdinalTranslation)
-var _ error = new(ErrCardinalTranslation)
-var _ error = new(ErrMissingPluralTranslation)
-var _ error = new(ErrExistingTranslator)
+// ErrKeyIsNotString occurs when a translation key is not a string.
+type ErrKeyIsNotString struct {
+}
 
-// ErrExistingTranslator is the error representing a conflicting translator
+// Error returns the string version of the error.
+func (e *ErrKeyIsNotString) Error() string {
+	return "translation key must be a string"
+}
+
+// Code returns the corresponding error code.
+func (e *ErrKeyIsNotString) Code() int {
+	return ErrKeyIsNotStringCode
+}
+
+// ErrUnknownTranslation occurs when an unknown translation key is supplied.
+type ErrUnknownTranslation struct {
+	Key string
+}
+
+// Error returns the string version of the error.
+func (e *ErrUnknownTranslation) Error() string {
+	return fmt.Sprintf("unknown translation key: %s", e.Key)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrUnknownTranslation) Code() int {
+	return ErrUnknownTranslationCode
+}
+
+// ErrExistingTranslator occurs when there is a conflicting translator.
 type ErrExistingTranslator struct {
-	locale string
+	Locale string
 }
 
-// Error returns ErrExistingTranslator's internal error text
+// Error returns the string version of the error.
 func (e *ErrExistingTranslator) Error() string {
-	return fmt.Sprintf("conflicting translator for locale '%s'", e.locale)
+	return fmt.Sprintf("conflicting translator for locale '%s'", e.Locale)
 }
 
-// ErrConflictingTranslation is the error representing a conflicting translation
+// Code returns the corresponding error code.
+func (e *ErrExistingTranslator) Code() int {
+	return ErrExistingTranslatorCode
+}
+
+// ErrConflictingTranslation occurs when there is a conflicting translation.
 type ErrConflictingTranslation struct {
-	locale string
-	key    interface{}
-	rule   locales.PluralRule
-	text   string
+	Locale string
+	Key    string
+	Rule   locales.PluralRule
+	Text   string
 }
 
-// Error returns ErrConflictingTranslation's internal error text
+// Error returns the string version of the error.
 func (e *ErrConflictingTranslation) Error() string {
-
-	if _, ok := e.key.(string); !ok {
-		return fmt.Sprintf("conflicting key '%#v' rule '%s' with text '%s' for locale '%s', value being ignored", e.key, e.rule, e.text, e.locale)
-	}
-
-	return fmt.Sprintf("conflicting key '%s' rule '%s' with text '%s' for locale '%s', value being ignored", e.key, e.rule, e.text, e.locale)
+	return fmt.Sprintf("conflicting key '%s' rule '%s' with text '%s' for locale '%s', value being ignored",
+		e.Key, e.Rule, e.Text, e.Locale)
 }
 
-// ErrRangeTranslation is the error representing a range translation error
+// Code returns the corresponding error code.
+func (e *ErrConflictingTranslation) Code() int {
+	return ErrConflictingTranslationCode
+}
+
+// ErrRangeTranslation occurs when there is a range translation error.
 type ErrRangeTranslation struct {
-	text string
+	Text string
 }
 
-// Error returns ErrRangeTranslation's internal error text
+// Error returns the string version of the error.
 func (e *ErrRangeTranslation) Error() string {
-	return e.text
+	return e.Text
 }
 
-// ErrOrdinalTranslation is the error representing an ordinal translation error
+// Code returns the corresponding error code.
+func (e *ErrRangeTranslation) Code() int {
+	return ErrRangeTranslationCode
+}
+
+// ErrOrdinalTranslation occurs when there is an ordinal translation error.
 type ErrOrdinalTranslation struct {
-	text string
+	Text string
 }
 
-// Error returns ErrOrdinalTranslation's internal error text
+// Error returns the string version of the error.
 func (e *ErrOrdinalTranslation) Error() string {
-	return e.text
+	return e.Text
 }
 
-// ErrCardinalTranslation is the error representing a cardinal translation error
+// Code returns the corresponding error code.
+func (e *ErrOrdinalTranslation) Code() int {
+	return ErrOrdinalTranslationCode
+}
+
+// ErrCardinalTranslation occurs when there is a cardinal translation error.
 type ErrCardinalTranslation struct {
-	text string
+	Text string
 }
 
-// Error returns ErrCardinalTranslation's internal error text
+// Error returns the string version of the error.
 func (e *ErrCardinalTranslation) Error() string {
-	return e.text
+	return e.Text
 }
 
-// ErrMissingPluralTranslation is the error signifying a missing translation given
-// the locales plural rules.
+// Code returns the corresponding error code.
+func (e *ErrCardinalTranslation) Code() int {
+	return ErrCardinalTranslationCode
+}
+
+// ErrMissingPluralTranslation occurs when there is a missing translation given the locales plural rules.
 type ErrMissingPluralTranslation struct {
-	locale          string
-	key             interface{}
-	rule            locales.PluralRule
-	translationType string
+	Locale          string
+	Key             string
+	Rule            locales.PluralRule
+	TranslationType string
 }
 
-// Error returns ErrMissingPluralTranslation's internal error text
+// Error returns the string version of the error.
 func (e *ErrMissingPluralTranslation) Error() string {
-
-	if _, ok := e.key.(string); !ok {
-		return fmt.Sprintf("missing '%s' plural rule '%s' for translation with key '%#v' and locale '%s'", e.translationType, e.rule, e.key, e.locale)
-	}
-
-	return fmt.Sprintf("missing '%s' plural rule '%s' for translation with key '%s' and locale '%s'", e.translationType, e.rule, e.key, e.locale)
+	return fmt.Sprintf("missing '%s' plural rule '%s' for translation with key '%s' and locale '%s'",
+		e.TranslationType, e.Rule, e.Key, e.Locale)
 }
 
-// ErrMissingBracket is the error representing a missing bracket in a translation
+// Code returns the corresponding error code.
+func (e *ErrMissingPluralTranslation) Code() int {
+	return ErrMissingPluralTranslationCode
+}
+
+// ErrMissingBrace occurs when there is a missing brace in a translation.
 // eg. This is a {0 <-- missing ending '}'
-type ErrMissingBracket struct {
-	locale string
-	key    interface{}
-	text   string
+type ErrMissingBrace struct {
+	Locale string
+	Key    interface{}
+	Text   string
 }
 
-// Error returns ErrMissingBracket error message
-func (e *ErrMissingBracket) Error() string {
-	return fmt.Sprintf("missing bracket '{}', in translation. locale: '%s' key: '%v' text: '%s'", e.locale, e.key, e.text)
+// Error returns the string version of the error.
+func (e *ErrMissingBrace) Error() string {
+	return fmt.Sprintf("missing brace ({}), in translation. locale: '%s' key: '%v' text: '%s'",
+		e.Locale, e.Key, e.Text)
 }
 
-// ErrBadParamSyntax is the error representing a bad parameter definition in a translation
+// Code returns the corresponding error code.
+func (e *ErrMissingBrace) Code() int {
+	return ErrMissingBraceCode
+}
+
+// ErrBadParamSyntax occurs when there is a bad parameter definition in a translation.
 // eg. This is a {must-be-int}
 type ErrBadParamSyntax struct {
-	locale string
-	param  string
-	key    interface{}
-	text   string
+	Locale string
+	Param  string
+	Key    string
+	Text   string
 }
 
-// Error returns ErrBadParamSyntax error message
+// Error returns the string version of the error.
 func (e *ErrBadParamSyntax) Error() string {
-	return fmt.Sprintf("bad parameter syntax, missing parameter '%s' in translation. locale: '%s' key: '%v' text: '%s'", e.param, e.locale, e.key, e.text)
+	return fmt.Sprintf(
+		"bad parameter syntax, missing parameter '%s' in translation. locale: '%s' key: '%s' text: '%s'",
+		e.Param, e.Locale, e.Key, e.Text)
 }
 
-// import/export errors
-
-// ErrMissingLocale is the error representing an expected locale that could
-// not be found aka locale not registered with the UniversalTranslator Instance
-type ErrMissingLocale struct {
-	locale string
+// Code returns the corresponding error code.
+func (e *ErrBadParamSyntax) Code() int {
+	return ErrBadParamSyntaxCode
 }
 
-// Error returns ErrMissingLocale's internal error text
-func (e *ErrMissingLocale) Error() string {
-	return fmt.Sprintf("locale '%s' not registered.", e.locale)
+// ErrLocaleNotRegistered occurs when a local is not registered with the translator instance.
+type ErrLocaleNotRegistered struct {
+	Locale string
 }
 
-/*
-// ErrBadPluralDefinition is the error representing an incorrect plural definition
-// usually found within translations defined within files during the import process.
-type ErrBadPluralDefinition struct {
-	tl translation
+// Error returns the string version of the error.
+func (e *ErrLocaleNotRegistered) Error() string {
+	return fmt.Sprintf("locale '%s' is not registered.", e.Locale)
 }
 
-// Error returns ErrBadPluralDefinition's internal error text
-func (e *ErrBadPluralDefinition) Error() string {
-	return fmt.Sprintf("bad plural definition '%#v'", e.tl)
-}
-*/
-type ErrBadRuleType struct {
-	ruleType string
+// Code returns the corresponding error code.
+func (e *ErrLocaleNotRegistered) Code() int {
+	return ErrLocaleNotRegisteredCode
 }
 
-func (e *ErrBadRuleType) Error() string {
-	return fmt.Sprintf("rule type '%s' is not valid", e.ruleType)
+// ErrInvalidRuleType occurs when an invalid rule type is detected in the translation file.
+type ErrInvalidRuleType struct {
+	RuleType string
+}
+
+// Error returns the string version of the error.
+func (e *ErrInvalidRuleType) Error() string {
+	return fmt.Sprintf("rule type '%s' is not valid", e.RuleType)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrInvalidRuleType) Code() int {
+	return ErrInvalidRuleTypeCode
+}
+
+// ErrExportPathFailure occurs when a failure is detected while creating the output path for exported trandlations.
+type ErrExportPathFailure struct {
+	Err  error
+	Path string
+}
+
+// Error returns the string version of the error.
+func (e *ErrExportPathFailure) Error() string {
+	return fmt.Sprintf("failed to create export path '%s': %s", e.Path, e.Err.Error())
+}
+
+// Code returns the corresponding error code.
+func (e *ErrExportPathFailure) Code() int {
+	return ErrExportPathFailureCode
+}
+
+// ErrExportWriteFailure occurs when a failure is detected while writing exported translations.
+type ErrExportWriteFailure struct {
+	Err  error
+	Path string
+}
+
+// Error returns the string version of the error.
+func (e *ErrExportWriteFailure) Error() string {
+	return fmt.Sprintf("failed to export translations to '%s': %s", e.Path, e.Err.Error())
+}
+
+// Code returns the corresponding error code.
+func (e *ErrExportWriteFailure) Code() int {
+	return ErrExportWriteFailureCode
+}
+
+// ErrImportPathFailure occurs when a failure is detected while opening the file or folder for importing translations.
+type ErrImportPathFailure struct {
+	Err  error
+	Path string
+}
+
+// Error returns the string version of the error.
+func (e *ErrImportPathFailure) Error() string {
+	return fmt.Sprintf("failed to create import path '%s': %s", e.Path, e.Err.Error())
+}
+
+// Code returns the corresponding error code.
+func (e *ErrImportPathFailure) Code() int {
+	return ErrImportPathFailureCode
+}
+
+// ErrImportReadFailure occurs when a failure is detected while reading translations during import.
+type ErrImportReadFailure struct {
+	Err  error
+	Path string
+}
+
+// Error returns the string version of the error.
+func (e *ErrImportReadFailure) Error() string {
+	if e.Path != "" {
+		return fmt.Sprintf("failed to import translations from '%s': %s", e.Path, e.Err.Error())
+	}
+	return fmt.Sprintf("failed to import translations: %s", e.Err.Error())
+}
+
+// Code returns the corresponding error code.
+func (e *ErrImportReadFailure) Code() int {
+	return ErrImportReadFailureCode
 }

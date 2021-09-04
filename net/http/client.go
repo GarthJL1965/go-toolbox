@@ -48,8 +48,8 @@ func NewClient(proxyConfig ProxyConfig) *Client {
 
 // Delete performs a DELETE request for the given URL and returns the raw body byte array.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) Delete(url string, headers map[string]string, body []byte, ctx context.Context) (
 	*http.Response, []byte, error) {
 	return c.doRequest("DELETE", url, headers, body, ctx)
@@ -57,8 +57,8 @@ func (c *Client) Delete(url string, headers map[string]string, body []byte, ctx 
 
 // Get performs a GET request for the given URL and returns the raw body byte array.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) Get(url string, headers map[string]string, ctx context.Context) (
 	*http.Response, []byte, error) {
 	return c.doRequest("GET", url, headers, nil, ctx)
@@ -66,8 +66,8 @@ func (c *Client) Get(url string, headers map[string]string, ctx context.Context)
 
 // Options performs an OPTIONS request for the given URL and returns the raw body byte array.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) Options(url string, headers map[string]string, ctx context.Context) (
 	*http.Response, []byte, error) {
 	return c.doRequest("OPTIONS", url, headers, nil, ctx)
@@ -75,8 +75,8 @@ func (c *Client) Options(url string, headers map[string]string, ctx context.Cont
 
 // Patch performs a PATCH request for the given URL and returns the raw body byte array.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) Patch(url string, headers map[string]string, body []byte, ctx context.Context) (
 	*http.Response, []byte, error) {
 	return c.doRequest("PATCH", url, headers, body, ctx)
@@ -84,8 +84,8 @@ func (c *Client) Patch(url string, headers map[string]string, body []byte, ctx c
 
 // Post performs a POST request for the given URL and returns the raw body byte array.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) Post(url string, headers map[string]string, body []byte, ctx context.Context) (
 	*http.Response, []byte, error) {
 	return c.doRequest("POST", url, headers, body, ctx)
@@ -93,8 +93,8 @@ func (c *Client) Post(url string, headers map[string]string, body []byte, ctx co
 
 // Put performs a PUT request for the given URL and returns the raw body byte array.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) Put(url string, headers map[string]string, body []byte, ctx context.Context) (
 	*http.Response, []byte, error) {
 	return c.doRequest("PUT", url, headers, body, ctx)
@@ -104,8 +104,8 @@ func (c *Client) Put(url string, headers map[string]string, body []byte, ctx con
 //
 // Note that only HTTP Basic authentication is supported for proxied requests.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrParseUrlFailure, ErrProxyFailure, ErrCreateRequestFailure
 func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Context) (
 	*http.Client, *http.Request, error) {
 
@@ -118,15 +118,17 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 	// parse the URL passed in
 	parsedUrl, err := neturl.Parse(url)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("failed to parse URL '%s': %s", url, err.Error())
-		return nil, nil, err
+		e := &ErrParseUrlFailure{URL: url, Err: err}
+		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 
 	// get any proxy URL required by our HTTP configuration
 	proxyURL, err := c.getProxy(parsedUrl)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("failed to check proxy status for URL '%s': %s", url, err.Error())
-		return nil, nil, err
+		e := &ErrProxyFailure{URL: url, Err: err}
+		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 
 	// add proxy authorization if required
@@ -174,9 +176,9 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 	// create the request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		logger.Error().Stack().Err(err).
-			Msgf("failed to create '%s' request for URL '%s': %s", method, url, err.Error())
-		return nil, nil, err
+		e := &ErrCreateRequestFailure{Method: method, URL: url, Err: err}
+		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 	if basicAuth != "" {
 		req.Header.Add("Proxy-Authorization", basicAuth)
@@ -187,8 +189,8 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 
 // doRequest handles performing the HTTP request and parsing the response.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrCreateRequestFailure, ErrDoRequestFailure, ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) doRequest(method string, url string, headers map[string]string, body []byte, ctx context.Context) (
 	*http.Response, []byte, error) {
 
@@ -204,7 +206,8 @@ func (c *Client) doRequest(method string, url string, headers map[string]string,
 	}
 	client, req, err := c.NewRequest(method, url, bytes.NewBuffer(body), ctx)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("failed to create %s request: %s", method, err.Error())
+		e := &ErrCreateRequestFailure{Method: method, URL: url, Err: err}
+		logger.Error().Stack().Err(e.Err).Msg(e.Error())
 		return nil, nil, err
 	}
 
@@ -217,7 +220,9 @@ func (c *Client) doRequest(method string, url string, headers map[string]string,
 	logger.Debug().Msgf("HTTP Request: %+v", req)
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("failed to perform %s request to '%s': %s", method, url, err.Error())
+		e := ErrDoRequestFailure{Method: method, URL: url, Err: err}
+		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+
 		return nil, nil, err
 	}
 	logger.Debug().Msgf("HTTP Response: %+v", resp)
@@ -226,8 +231,8 @@ func (c *Client) doRequest(method string, url string, headers map[string]string,
 
 // parseResponse parses the response from the HTTP request and returns the raw byte body.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrReadResponseFailure, ErrStatusCodeNotOK
 func (c *Client) parseResponse(resp *http.Response, ctx context.Context) (*http.Response, []byte, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -241,13 +246,14 @@ func (c *Client) parseResponse(resp *http.Response, ctx context.Context) (*http.
 		logger.Debug().Msgf("HTTP Response Body: %s", string(body))
 	}
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("failed to read response body: %s", err.Error())
-		return resp, nil, err
+		e := &ErrReadResponseFailure{Err: err}
+		logger.Error().Stack().Err(e.Err).Msgf(e.Error())
+		return resp, nil, e
 	}
 	if resp.StatusCode >= 400 {
-		err := fmt.Errorf("HTTP request returned error code %d", resp.StatusCode)
-		logger.Error().Stack().Err(err).Msg(err.Error())
-		return resp, body, err
+		e := &ErrStatusCodeNotOK{StatusCode: resp.StatusCode}
+		logger.Error().Stack().Err(e).Msg(e.Error())
+		return resp, body, e
 	}
 	return resp, body, nil
 }
