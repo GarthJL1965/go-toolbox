@@ -25,8 +25,8 @@ type CertificatePool struct {
 // If empty is true, return an empty certificate pool instead of a pool containing a copy of all of the system's
 // trusted root certificates.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrLoadCertificateFailure
 func NewCertificatePool(emptyPool bool, ctx context.Context) (*CertificatePool, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -41,8 +41,9 @@ func NewCertificatePool(emptyPool bool, ctx context.Context) (*CertificatePool, 
 
 	pool, err := getSystemPool()
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to load system certificates into pool: %s", err.Error())
-		return nil, err
+		e := &ErrLoadCertificateFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	return &CertificatePool{
 		CertPool: pool,
@@ -51,8 +52,8 @@ func NewCertificatePool(emptyPool bool, ctx context.Context) (*CertificatePool, 
 
 // AddPEMCertificatesFromFile adds one or more PEM-formatted certificates from a file to the certificate pool.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrLoadCertificateFailure
 func (p *CertificatePool) AddPEMCertificatesFromFile(file string, ctx context.Context) error {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -61,14 +62,15 @@ func (p *CertificatePool) AddPEMCertificatesFromFile(file string, ctx context.Co
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to load PEM certificates from file '%s': %s", file, err.Error())
-		return err
+		e := &ErrLoadCertificateFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 
 	if !p.AppendCertsFromPEM([]byte(contents)) {
-		err := errors.New("one or more PEM certificates werre not parsed")
-		logger.Error().Stack().Err(err).Msgf("Failed to load PEM certificates from file '%s': %s", file, err.Error())
-		return err
+		e := &ErrLoadCertificateFailure{Err: errors.New("one or more PEM certificates werre not parsed")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 	return nil
 }
@@ -85,8 +87,8 @@ func (p *CertificatePool) AddPEMCertificatesFromFile(file string, ctx context.Co
 // If you wish to verify the common name (CN) field of the public key passed in, specify a non-empty string
 // for the cn parameter. This match is case-sensitive.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrInvalidCertificate
 func ValidateCertificate(cert *x509.Certificate, roots *CertificatePool, intermediates *CertificatePool,
 	keyUsages []x509.ExtKeyUsage, cn string, ctx context.Context) error {
 
@@ -96,9 +98,9 @@ func ValidateCertificate(cert *x509.Certificate, roots *CertificatePool, interme
 	}
 
 	if cert == nil {
-		err := errors.New("no certificate was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to validate certificate: %s", err.Error())
-		return err
+		e := &ErrInvalidCertificate{Err: errors.New("no certificate was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 
 	// verify the certificate chain and usage
@@ -113,26 +115,26 @@ func ValidateCertificate(cert *x509.Certificate, roots *CertificatePool, interme
 		verifyOptions.KeyUsages = keyUsages
 	}
 	if _, err := cert.Verify(verifyOptions); err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to validate certificate: %s", err.Error())
-		return err
+		e := &ErrInvalidCertificate{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 
 	// verify the common name
 	if cn != "" && cert.Subject.CommonName != cn {
-		err := fmt.Errorf("CommonName '%s' does not match expected CN '%s'", cert.Subject.CommonName, cn)
-		logger.Error().Stack().Str("certificate_cn", cert.Subject.CommonName).Str("expected_cn", cn).Err(err).
-			Msgf("Failed to validate certificate: %s", err.Error())
-		return err
+		e := &ErrInvalidCertificate{CommonName: cert.Subject.CommonName, ExpectedCommonName: cn,
+			Err: fmt.Errorf("CommonName '%s' does not match expected CN '%s'", cert.Subject.CommonName, cn)}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
-	logger.Debug().Msg("certificate has been validated")
 	return nil
 }
 
 // NewSelfSignedCertificateKeyPair creates a new self-signed certificate using the given template and returns the
 // public certificate and private key, respectively, on success.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+//
 func NewSelfSignedCertificateKeyPair(template *x509.Certificate, keyBits int, ctx context.Context) (
 	[]byte, []byte, error) {
 
@@ -144,8 +146,9 @@ func NewSelfSignedCertificateKeyPair(template *x509.Certificate, keyBits int, ct
 	// generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, keyBits)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to generate private key: %s", err.Error())
-		return nil, nil, err
+		e := &ErrGeneratePrivateKeyFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 	publicKey := &privateKey.PublicKey
 	key := new(bytes.Buffer)
@@ -153,24 +156,27 @@ func NewSelfSignedCertificateKeyPair(template *x509.Certificate, keyBits int, ct
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}); err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to PEM-encode private key: %s", err.Error())
-		return nil, nil, err
+		e := &ErrEncodeFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 
 	// create a self-signed certificate
 	var parent = template
 	certBytes, err := x509.CreateCertificate(rand.Reader, template, parent, publicKey, privateKey)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to generate self-signed certificate: %s", err.Error())
-		return nil, nil, err
+		e := &ErrGenerateCertificateFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 	cert := new(bytes.Buffer)
 	if err := pem.Encode(cert, &pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
 	}); err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to PEM-encode certificate: %s", err.Error())
-		return nil, nil, err
+		e := &ErrEncodeFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, nil, e
 	}
 
 	return cert.Bytes(), key.Bytes(), nil

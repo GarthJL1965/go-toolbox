@@ -2,7 +2,7 @@ package crypto
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	pmailcrypto "github.com/ProtonMail/gopenpgp/v2/crypto"
 	"go.imperva.dev/zerolog"
@@ -20,20 +20,22 @@ type PGPKeyPair struct {
 //
 // Be sure to call ClearPrivateParams on the returned key to clear memory out when finished with the object.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrGeneratePGPKeyFailure, ErrLockPGPKeyFailure, ErrPGPArmorKeyFailure
 func NewPGPKeyPair(name, email, keyType string, bits int, ctx context.Context) (*PGPKeyPair, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
+	logger = logger.With().Str("name", name).Str("email", email).Str("key_type", keyType).Int("bits", bits).Logger()
 	kp := &PGPKeyPair{}
 
 	// generate a new key
 	key, err := pmailcrypto.GenerateKey(name, email, keyType, bits)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to generate private key: %s", err.Error())
-		return nil, err
+		e := &ErrGeneratePGPKeyFailure{Err: err, Name: name, Email: email, KeyType: keyType, Bits: bits}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	kp.privateKey = key
 
@@ -41,13 +43,15 @@ func NewPGPKeyPair(name, email, keyType string, bits int, ctx context.Context) (
 	kp.passphrase = GeneratePassword(32, 5, 5, 5)
 	locked, err := key.Lock([]byte(kp.passphrase))
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to lock private key: %s", err.Error())
-		return nil, err
+		e := &ErrLockPGPKeyFailure{Err: err, Name: name, Email: email, KeyType: keyType, Bits: bits}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	armoredKey, err := locked.Armor()
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to armor private key: %s", err.Error())
-		return nil, err
+		e := &ErrArmorPGPKeyFailure{Err: err, Name: name, Email: email, KeyType: keyType, Bits: bits}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	kp.armoredKey = armoredKey
 	return kp, nil
@@ -57,8 +61,8 @@ func NewPGPKeyPair(name, email, keyType string, bits int, ctx context.Context) (
 //
 // Be sure to call ClearPrivateParams on the returned key to clear memory out when finished with the object.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrLoadPGPKeyFailure, ErrUnlockPGPKeyFailure
 func NewPGPKeyPairFromArmor(armoredKey, passphrase string, ctx context.Context) (*PGPKeyPair, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -72,15 +76,17 @@ func NewPGPKeyPairFromArmor(armoredKey, passphrase string, ctx context.Context) 
 	// load the key
 	key, err := pmailcrypto.NewKeyFromArmored(kp.armoredKey)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to load private key from PGP armor: %s", err.Error())
-		return nil, err
+		e := &ErrLoadPGPKeyFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	// check to see if the key is locked
 	locked, err := key.IsLocked()
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Unable to determine if private key is locked: %s", err.Error())
-		return nil, err
+		e := &ErrUnlockPGPKeyFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	if !locked {
 		kp.privateKey = key
@@ -90,8 +96,9 @@ func NewPGPKeyPairFromArmor(armoredKey, passphrase string, ctx context.Context) 
 	// unlock the key
 	unlocked, err := key.Unlock([]byte(kp.passphrase))
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to unlock private key: %s", err.Error())
-		return nil, err
+		e := &ErrUnlockPGPKeyFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	kp.privateKey = unlocked
 	return kp, nil
@@ -106,8 +113,8 @@ func (kp *PGPKeyPair) ClearPrivateParams() {
 
 // ArmoredPrivateKey returns the private key wrapped in PGP armor.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrGetPGPKeyFailure
 func (kp *PGPKeyPair) GetArmoredPrivateKey(ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -115,17 +122,17 @@ func (kp *PGPKeyPair) GetArmoredPrivateKey(ctx context.Context) (string, error) 
 	}
 
 	if kp.armoredKey == "" {
-		err := fmt.Errorf("private key has not been initialized")
-		logger.Error().Stack().Err(err).Msgf("Failed to get armored private key: %s", err.Error())
-		return "", err
+		e := &ErrGetPGPKeyFailure{Err: errors.New("private key has not been initialized")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return "", e
 	}
 	return kp.armoredKey, nil
 }
 
 // ArmoredPublicKey returns the public key wrapped in PGP armor.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrGetPGPKeyFailure
 func (kp *PGPKeyPair) GetArmoredPublicKey(ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -133,9 +140,15 @@ func (kp *PGPKeyPair) GetArmoredPublicKey(ctx context.Context) (string, error) {
 	}
 
 	if kp.privateKey == nil { // should never happen
-		err := fmt.Errorf("private key has not been initialized")
-		logger.Error().Stack().Err(err).Msgf("Failed to get armored public key: %s", err.Error())
-		return "", err
+		e := &ErrGetPGPKeyFailure{Err: errors.New("private key has not been initialized")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return "", e
 	}
-	return kp.privateKey.GetArmoredPublicKey()
+	key, err := kp.privateKey.GetArmoredPublicKey()
+	if err != nil {
+		e := &ErrGetPGPKeyFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return "", e
+	}
+	return key, nil
 }

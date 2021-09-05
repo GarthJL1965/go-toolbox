@@ -119,7 +119,7 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 	parsedUrl, err := neturl.Parse(url)
 	if err != nil {
 		e := &ErrParseUrlFailure{URL: url, Err: err}
-		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		logger.Error().Err(e.Err).Msg(e.Error())
 		return nil, nil, e
 	}
 
@@ -127,7 +127,7 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 	proxyURL, err := c.getProxy(parsedUrl)
 	if err != nil {
 		e := &ErrProxyFailure{URL: url, Err: err}
-		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		logger.Error().Err(e.Err).Msg(e.Error())
 		return nil, nil, e
 	}
 
@@ -177,7 +177,7 @@ func (c *Client) NewRequest(method, url string, body io.Reader, ctx context.Cont
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		e := &ErrCreateRequestFailure{Method: method, URL: url, Err: err}
-		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		logger.Error().Err(e.Err).Msg(e.Error())
 		return nil, nil, e
 	}
 	if basicAuth != "" {
@@ -207,7 +207,7 @@ func (c *Client) doRequest(method string, url string, headers map[string]string,
 	client, req, err := c.NewRequest(method, url, bytes.NewBuffer(body), ctx)
 	if err != nil {
 		e := &ErrCreateRequestFailure{Method: method, URL: url, Err: err}
-		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		logger.Error().Err(e.Err).Msg(e.Error())
 		return nil, nil, err
 	}
 
@@ -221,7 +221,7 @@ func (c *Client) doRequest(method string, url string, headers map[string]string,
 	resp, err := client.Do(req)
 	if err != nil {
 		e := ErrDoRequestFailure{Method: method, URL: url, Err: err}
-		logger.Error().Stack().Err(e.Err).Msg(e.Error())
+		logger.Error().Err(e.Err).Msg(e.Error())
 
 		return nil, nil, err
 	}
@@ -247,12 +247,12 @@ func (c *Client) parseResponse(resp *http.Response, ctx context.Context) (*http.
 	}
 	if err != nil {
 		e := &ErrReadResponseFailure{Err: err}
-		logger.Error().Stack().Err(e.Err).Msgf(e.Error())
+		logger.Error().Err(e.Err).Msgf(e.Error())
 		return resp, nil, e
 	}
 	if resp.StatusCode >= 400 {
 		e := &ErrStatusCodeNotOK{StatusCode: resp.StatusCode}
-		logger.Error().Stack().Err(e).Msg(e.Error())
+		logger.Error().Err(e).Msg(e.Error())
 		return resp, body, e
 	}
 	return resp, body, nil

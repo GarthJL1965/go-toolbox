@@ -15,8 +15,8 @@ import (
 
 // ParsePublicKeyFromCertificate parses the RSA public key portion from an X509 certificate.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrExtractPublicKeyFailure
 func ParsePublicKeyFromCertificate(cert *x509.Certificate, ctx context.Context) (*rsa.PublicKey, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -25,17 +25,17 @@ func ParsePublicKeyFromCertificate(cert *x509.Certificate, ctx context.Context) 
 
 	// validate paramaters
 	if cert == nil {
-		err := errors.New("no certificate was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to extract public key: %s", err.Error())
-		return nil, err
+		e := &ErrExtractPublicKeyFailure{Err: errors.New("no certificate was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	// extract the RSA public key from the certificate
 	publicKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		err := errors.New("public key does not appear to be in RSA format")
-		logger.Error().Stack().Err(err).Msgf("Failed to extract public key: %s", err.Error())
-		return nil, err
+		e := &ErrExtractPublicKeyFailure{Err: errors.New("public key does not appear to be in RSA format")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	return publicKey, nil
 }
@@ -47,8 +47,8 @@ func ParsePublicKeyFromCertificate(cert *x509.Certificate, ctx context.Context) 
 //
 // Use the Verify() function to verify the signature produced for the content.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrSignDataFailure
 func Sign(contents []byte, privateKey *rsa.PrivateKey, ctx context.Context) ([]byte, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -57,14 +57,14 @@ func Sign(contents []byte, privateKey *rsa.PrivateKey, ctx context.Context) ([]b
 
 	// validate parameters
 	if contents == nil {
-		err := errors.New("no content was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to generate signature for contents: %s", err.Error())
-		return nil, err
+		e := &ErrSignDataFailure{Err: errors.New("no content was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	if privateKey == nil {
-		err := errors.New("no private key was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to generate signature for contents: %s", err.Error())
-		return nil, err
+		e := &ErrSignDataFailure{Err: errors.New("no private key was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	// hash the contents so we can sign that
@@ -75,10 +75,10 @@ func Sign(contents []byte, privateKey *rsa.PrivateKey, ctx context.Context) ([]b
 	// use PSS to sign the contents as it is newer and supposedly better than PKCSv1.5
 	signature, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA256, hashSum, nil)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to generate signature for contents: %s", err.Error())
-		return nil, err
+		e := &ErrSignDataFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
-	logger.Debug().Msg("successfully generated signature for content")
 	return signature, nil
 }
 
@@ -88,8 +88,8 @@ func Sign(contents []byte, privateKey *rsa.PrivateKey, ctx context.Context) ([]b
 // Use the Sign() function to create the signature used by this function to ensure the same hashing algorithm
 // is applied.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrInvalidSignature
 func Verify(contents, signature []byte, publicKey *rsa.PublicKey, ctx context.Context) error {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -98,19 +98,19 @@ func Verify(contents, signature []byte, publicKey *rsa.PublicKey, ctx context.Co
 
 	// validate parameters
 	if contents == nil {
-		err := errors.New("no content was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to verify signature for contents: %s", err.Error())
-		return err
+		e := &ErrInvalidSignature{Err: errors.New("no content was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 	if signature == nil {
-		err := errors.New("no signature was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to verify signature for contents: %s", err.Error())
-		return err
+		e := &ErrInvalidSignature{Err: errors.New("no signature was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 	if publicKey == nil {
-		err := errors.New("no public key was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to verify signature for contents: %s", err.Error())
-		return err
+		e := &ErrInvalidSignature{Err: errors.New("no public key was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 
 	// hash the contents so we can verify that
@@ -120,8 +120,9 @@ func Verify(contents, signature []byte, publicKey *rsa.PublicKey, ctx context.Co
 
 	// verify the signature
 	if err := rsa.VerifyPSS(publicKey, crypto.SHA256, hashSum, signature, nil); err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to verify signature for contents: %s", err.Error())
-		return err
+		e := &ErrInvalidSignature{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 	return nil
 }

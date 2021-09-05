@@ -97,7 +97,7 @@ func (w *ConditionalWaiter) Run(ctx context.Context) {
 					Selectors: selectors,
 					Err:       err,
 				}
-				logger.Error().Stack().Err(e.Err).Str("label_selectors", selectors).Msg(e.Error())
+				logger.Error().Err(e.Err).Str("label_selectors", selectors).Msg(e.Error())
 				w.waitError = e
 				return
 			}
@@ -115,7 +115,7 @@ func (w *ConditionalWaiter) Run(ctx context.Context) {
 					Selectors: selectors,
 					Err:       errors.New("maximum wait time exceeded for resource creation"),
 				}
-				logger.Error().Stack().Err(e.Err).Str("label_selectors", selectors).Msg(e.Error())
+				logger.Error().Err(e.Err).Str("label_selectors", selectors).Msg(e.Error())
 				w.waitError = e
 				return
 			}
@@ -191,12 +191,8 @@ func (w *ConditionalWaiter) waitForObject(name string, wg *sync.WaitGroup, ctx c
 		// lookup the object
 		obj, err := w.resource.dr.Get(context.Background(), name, metav1.GetOptions{})
 		if err != nil {
-			e := &ErrResourceWaitFailure{
-				Kind: kind,
-				Name: name,
-				Err:  err,
-			}
-			logger.Error().Stack().Err(e.Err).Msg(e.Error())
+			e := &ErrResourceWaitFailure{Kind: kind, Name: name, Err: err}
+			logger.Error().Err(e.Err).Msg(e.Error())
 			w.waitError = e
 			return
 		}
@@ -204,12 +200,8 @@ func (w *ConditionalWaiter) waitForObject(name string, wg *sync.WaitGroup, ctx c
 		// is the condition met
 		isMet, err := w.isConditionMet(obj)
 		if err != nil {
-			e := &ErrResourceWaitFailure{
-				Kind: kind,
-				Name: name,
-				Err:  err,
-			}
-			logger.Error().Stack().Err(e.Err).Msg(e.Error())
+			e := &ErrResourceWaitFailure{Kind: kind, Name: name, Err: err}
+			logger.Error().Err(e.Err).Msg(e.Error())
 			w.waitError = e
 			return
 		}
@@ -220,12 +212,10 @@ func (w *ConditionalWaiter) waitForObject(name string, wg *sync.WaitGroup, ctx c
 
 		// has the wait timed out
 		if time.Now().After(expires) {
-			e := &ErrResourceWaitFailure{
-				Kind: kind,
-				Name: name,
-				Err:  errors.New("maximum wait time exceeded for resource condition"),
+			e := &ErrResourceWaitFailure{Kind: kind, Name: name,
+				Err: errors.New("maximum wait time exceeded for resource condition"),
 			}
-			logger.Error().Stack().Err(e.Err).Msg(e.Error())
+			logger.Error().Err(e.Err).Msg(e.Error())
 			w.waitError = e
 			return
 		}
@@ -273,27 +263,21 @@ func (c *WaitCondition) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// parse the data
 	var condition marshalledWaitCondition
 	if err := unmarshal(&condition); err != nil {
-		e := &ErrWaitConditionInvalid{
-			Err: fmt.Errorf("failed to parse configuration: %s", err.Error()),
-		}
+		e := &ErrWaitConditionInvalid{Err: fmt.Errorf("failed to parse configuration: %s", err.Error())}
 		return e
 	}
 
 	// convert the raw resource data back into bytes that we can decode later
 	res, err := yaml.Marshal(condition.RawResource)
 	if err != nil {
-		e := &ErrWaitConditionInvalid{
-			Err: fmt.Errorf("failed to encode resource data: %s", err.Error()),
-		}
+		e := &ErrWaitConditionInvalid{Err: fmt.Errorf("failed to encode resource data: %s", err.Error())}
 		return e
 	}
 	condition.ResourceDefinition = res
 
 	// make sure there is a non-empty condition
 	if condition.Condition == "" {
-		return &ErrWaitConditionInvalid{
-			Err: errors.New("condition cannot be empty"),
-		}
+		return &ErrWaitConditionInvalid{Err: errors.New("condition cannot be empty")}
 	}
 
 	// validate condition values

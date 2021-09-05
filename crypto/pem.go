@@ -69,25 +69,27 @@ var rfc1423Algos = []rfc1423Algo{{
 
 // DecodePEMBlockFromFile loads a file into memory and decodes any PEM data from it.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrReadFileFailure
 func DecodePEMBlockFromFile(file string, ctx context.Context) (*pem.Block, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
+	logger = logger.With().Str("file", file).Logger()
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to read file '%s': %s", file, err.Error())
-		return nil, err
+		e := &ErrReadFileFailure{Err: err, File: file}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	block, _ := pem.Decode(contents)
 	if block == nil {
-		err := errors.New("no PEM data was decoded")
-		logger.Error().Stack().Err(err).Msgf("Failed to decode PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrReadFileFailure{Err: errors.New("no PEM data was decoded"), File: file}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	return block, nil
 }
@@ -100,8 +102,8 @@ func DecodePEMBlockFromFile(file string, ctx context.Context) (*pem.Block, error
 // deficiencies in the format, it's not always possible to detect an incorrect password. In these cases no error will
 // be returned but the decrypted DER bytes will be random noise.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrDecryptFailure
 func DecryptPEMBlock(b *pem.Block, password []byte, ctx context.Context) ([]byte, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -109,55 +111,57 @@ func DecryptPEMBlock(b *pem.Block, password []byte, ctx context.Context) ([]byte
 	}
 
 	if b == nil {
-		err := errors.New("PEM block is nil")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("PEM block is nil")}
+		logger.Error().Err(e.Err).Msg(e.Err.Error())
+		return nil, e
 	}
 
 	dek, ok := b.Headers["DEK-Info"]
 	if !ok {
-		err := errors.New("no DEK-Info header in block")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("no DEK-Info header in block")}
+		logger.Error().Err(e.Err).Msg(e.Err.Error())
+		return nil, e
 	}
 
 	idx := strings.Index(dek, ",")
 	if idx == -1 {
-		err := errors.New("malformed DEK-Info header")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("malformed DEK-Info header")}
+		logger.Error().Err(e.Err).Msg(e.Err.Error())
+		return nil, e
 	}
 
 	mode, hexIV := dek[:idx], dek[idx+1:]
 	ciph := cipherByName(mode)
 	if ciph == nil {
-		err := errors.New("unknown encryption mode")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("unknown encryption mode")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	iv, err := hex.DecodeString(hexIV)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	if len(iv) != ciph.blockSize {
-		err := errors.New("incorrect IV size")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("incorrect IV size")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	// based on the OpenSSL implementation - the salt is the first 8 bytes of the initialization vector
 	key := ciph.deriveKey(password, iv[:8])
 	block, err := ciph.cipherFunc(key)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	if len(b.Bytes)%block.BlockSize() != 0 {
-		err := errors.New("encrypted PEM data is not a multiple of the block size")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("encrypted PEM data is not a multiple of the block size")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	data := make([]byte, len(b.Bytes))
@@ -172,26 +176,26 @@ func DecryptPEMBlock(b *pem.Block, password []byte, ctx context.Context) ([]byte
 	// If we detect a bad padding, we assume it is an invalid password.
 	dlen := len(data)
 	if dlen == 0 || dlen%ciph.blockSize != 0 {
-		err := errors.New("invalid padding")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("invalid padding")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	last := int(data[dlen-1])
 	if dlen < last {
-		err := errors.New("password is incorrect")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("password is incorrect")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	if last == 0 || last > ciph.blockSize {
-		err := errors.New("password is incorrect")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("password is incorrect")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	for _, val := range data[dlen-last:] {
 		if int(val) != last {
-			err := errors.New("password is incorrect")
-			logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-			return nil, err
+			e := &ErrDecryptFailure{Err: errors.New("password is incorrect")}
+			logger.Error().Err(e.Err).Msg(e.Error())
+			return nil, e
 		}
 	}
 	return data[:dlen-last], nil
@@ -200,8 +204,8 @@ func DecryptPEMBlock(b *pem.Block, password []byte, ctx context.Context) ([]byte
 // EncryptPEMBlock returns a PEM block of the specified type holding the given DER encoded data encrypted with the
 // specified algorithm and password according to RFC 1423.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrEncryptFailure, ErrGenerateIVFailure
 func EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte, alg PEMCipher, ctx context.Context) (
 	*pem.Block, error) {
 
@@ -212,22 +216,24 @@ func EncryptPEMBlock(rand io.Reader, blockType string, data, password []byte, al
 
 	ciph := cipherByKey(alg)
 	if ciph == nil {
-		err := errors.New("unknown encryption mode")
-		logger.Error().Stack().Err(err).Msgf("Failed to encrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrEncryptFailure{Err: errors.New("unknown encryption mode")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	iv := make([]byte, ciph.blockSize)
 	if _, err := io.ReadFull(rand, iv); err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to generate IV: %s", err.Error())
-		return nil, err
+		e := &ErrGenerateIVFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	// the salt is the first 8 bytes of the initialization vector, matching the key derivation in DecryptPEMBlock.
 	key := ciph.deriveKey(password, iv[:8])
 	block, err := ciph.cipherFunc(key)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to encrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrEncryptFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	enc := cipher.NewCBCEncrypter(block, iv)
 	pad := ciph.blockSize - len(data)%ciph.blockSize
@@ -263,8 +269,8 @@ func IsEncryptedPEMBlock(b *pem.Block) bool {
 
 // ParsePEMCertificateBytes takes a PEM-formatted byte string and converts it into one or more X509 certificates.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrDecryptFailure, ErrDecodeFailure, ErrParseCertificateFailure
 func ParsePEMCertificateBytes(contents []byte, ctx context.Context) ([]*x509.Certificate, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -272,42 +278,43 @@ func ParsePEMCertificateBytes(contents []byte, ctx context.Context) ([]*x509.Cer
 	}
 
 	if contents == nil {
-		err := errors.New("no content was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("no content was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	block, _ := pem.Decode(contents)
 	if block == nil {
-		err := errors.New("no PEM data was decoded")
-		logger.Error().Stack().Err(err).Msgf("Failed to decode PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecodeFailure{Err: errors.New("no PEM data was decoded")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	certs, err := x509.ParseCertificates(block.Bytes)
 	if err != nil {
-		logger.Error().Stack().Err(err).
-			Msgf("Failed to parse PEM data into one or more certificates: %s", err.Error())
-		return nil, err
-
+		e := &ErrParseCertificateFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	return certs, nil
 }
 
 // ParsePEMCertificateFile takes a PEM-formatted file and converts it into one or more X509 certificates.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrReadFileFailure, any error returned by ParsePEMCertificateBytes
 func ParsePEMCertificateFile(file string, ctx context.Context) ([]*x509.Certificate, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
+	logger = logger.With().Str("file", file).Logger()
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to read file '%s': %s", file, err.Error())
-		return nil, err
+		e := &ErrReadFileFailure{Err: err, File: file}
+		logger.Error().Err(e.Err).Msg(err.Error())
+		return nil, e
 	}
 	return ParsePEMCertificateBytes(contents, ctx)
 }
@@ -317,8 +324,8 @@ func ParsePEMCertificateFile(file string, ctx context.Context) ([]*x509.Certific
 // If the private key is encrypted, be sure to include a password or else this function will return an error.
 // If no password is required, you can safely pass nil for the password.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrDecryptFailure, ErrDecodeFailure
 func ParsePEMPrivateKeyBytes(contents []byte, password []byte, ctx context.Context) (*rsa.PrivateKey, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
@@ -326,37 +333,39 @@ func ParsePEMPrivateKeyBytes(contents []byte, password []byte, ctx context.Conte
 	}
 
 	if contents == nil {
-		err := errors.New("no content was provided")
-		logger.Error().Stack().Err(err).Msgf("Failed to decrypt PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: errors.New("no content was provided")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	block, _ := pem.Decode(contents)
 	if block == nil {
-		err := errors.New("no PEM data was decoded")
-		logger.Error().Stack().Err(err).Msgf("Failed to decode PEM data: %s", err.Error())
-		return nil, err
+		e := &ErrDecodeFailure{Err: errors.New("no PEM data was decoded")}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 
 	var err error
 	decryptedBlock := block.Bytes
 	if IsEncryptedPEMBlock(block) {
 		if password == nil {
-			err := errors.New("private key is encrypted but no password was supplied")
-			logger.Error().Stack().Err(err).Msgf("Failed to parse private key: %s", err.Error())
-			return nil, err
+			e := &ErrDecryptFailure{Err: errors.New("private key is encrypted but no password was supplied")}
+			logger.Error().Err(e.Err).Msg(e.Error())
+			return nil, e
 		}
 		decryptedBlock, err = DecryptPEMBlock(block, password, ctx)
 		if err != nil {
-			logger.Error().Stack().Err(err).Msgf("Failed to decrypt private key: %s", err.Error())
-			return nil, err
+			e := &ErrDecryptFailure{Err: err}
+			logger.Error().Err(e.Err).Msg(e.Error())
+			return nil, e
 		}
 	}
 
 	key, err := x509.ParsePKCS1PrivateKey(decryptedBlock)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to parse private key: %s", err.Error())
-		return nil, err
+		e := &ErrDecryptFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	return key, nil
 }
@@ -366,18 +375,20 @@ func ParsePEMPrivateKeyBytes(contents []byte, password []byte, ctx context.Conte
 // If the private key is encrypted, be sure to include a password or else this function will return an error.
 // If no password is required, you can safely pass nil for the password.
 //
-// Logging for this function is performed using either the zerolog logger supplied in the context or the
-// global zerlog logger.
+// The following errors are returned by this function:
+// ErrReadFileFailure, any error returned by ParsePEMPrivateKeyBytes
 func ParsePEMPrivateKeyFile(file string, password []byte, ctx context.Context) (*rsa.PrivateKey, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
 	}
+	logger = logger.With().Str("file", file).Logger()
 
 	contents, err := ioutil.ReadFile(file)
 	if err != nil {
-		logger.Error().Stack().Err(err).Msgf("Failed to read file '%s': %s", file, err.Error())
-		return nil, err
+		e := &ErrReadFileFailure{Err: err, File: file}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return nil, e
 	}
 	return ParsePEMPrivateKeyBytes(contents, password, ctx)
 }
