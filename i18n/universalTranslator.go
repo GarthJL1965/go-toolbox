@@ -1,10 +1,13 @@
 package i18n
 
 import (
+	"context"
 	"strings"
 
 	"github.com/go-playground/locales"
 	ut "github.com/go-playground/universal-translator"
+	"go.imperva.dev/zerolog"
+	"go.imperva.dev/zerolog/log"
 )
 
 // UniversalTranslator holds all locale & translation data.
@@ -75,12 +78,19 @@ func (t *UniversalTranslator) GetFallback() ut.Translator {
 //
 // The following errors are returned by this function:
 // ErrExistingTranslator
-func (t *UniversalTranslator) AddTranslator(translator locales.Translator, override bool) error {
-
+func (t *UniversalTranslator) AddTranslator(translator locales.Translator, override bool, ctx context.Context) error {
+	logger := log.Logger
+	if l := zerolog.Ctx(ctx); l != nil {
+		logger = *l
+	}
 	lc := strings.ToLower(translator.Locale())
+	logger = logger.With().Str("locale", translator.Locale()).Logger()
+
 	_, ok := t.translators[lc]
 	if ok && !override {
-		return &ErrExistingTranslator{Locale: translator.Locale()}
+		e := &ErrExistingTranslator{Locale: translator.Locale()}
+		logger.Error().Err(e).Msg(e.Error())
+		return e
 	}
 
 	trans := newTranslator(translator)
@@ -90,7 +100,9 @@ func (t *UniversalTranslator) AddTranslator(translator locales.Translator, overr
 		// because it's optional to have a fallback, I don't impose that limitation
 		// don't know why you wouldn't but...
 		if !override {
-			return &ErrExistingTranslator{Locale: translator.Locale()}
+			e := &ErrExistingTranslator{Locale: translator.Locale()}
+			logger.Error().Err(e).Msg(e.Error())
+			return e
 		}
 
 		t.fallback = trans

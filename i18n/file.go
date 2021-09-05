@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/go-playground/locales"
+	"go.imperva.dev/zerolog"
+	"go.imperva.dev/zerolog/log"
 )
 
 const (
@@ -41,14 +44,24 @@ type translations map[string]*translation
 //
 // The following errors are returned by this function:
 // ErrExportPathFailure, ErrKeyIsNotString, ExportWriteFailure
-func (ut *UniversalTranslator) Export(path string) error {
+func (ut *UniversalTranslator) Export(path string, ctx context.Context) error {
+	logger := log.Logger
+	if l := zerolog.Ctx(ctx); l != nil {
+		logger = *l
+	}
+	logger = logger.With().Str("path", path).Logger()
+
 	// create the folder if it doesn't exist already
 	if _, err := os.Stat(path); err != nil {
 		if !os.IsNotExist(err) {
-			return &ErrExportPathFailure{Err: err, Path: path}
+			e := &ErrExportPathFailure{Err: err, Path: path}
+			logger.Error().Err(e.Err).Msg(e.Error())
+			return e
 		}
 		if err = os.MkdirAll(path, 0755); err != nil {
-			return &ErrExportPathFailure{Err: err, Path: path}
+			e := &ErrExportPathFailure{Err: err, Path: path}
+			logger.Error().Err(e.Err).Msg(e.Error())
+			return e
 		}
 	}
 
@@ -57,6 +70,8 @@ func (ut *UniversalTranslator) Export(path string) error {
 		// build translations for the locale
 		trans := translations{}
 		l := locale.Locale()
+		cl := logger.With().Str("locale", l).Logger()
+		cl.Debug().Msgf("exporting locale: %s", l)
 		for k, v := range locale.(*translator).translations {
 			key, ok := k.(string)
 			if !ok {
@@ -68,13 +83,17 @@ func (ut *UniversalTranslator) Export(path string) error {
 			trans[key].Locale = l
 			trans[key].Other = v.text
 		}
-		if err := ut.exportPlurals(trans, l, RuleTypeCardinal, locale.(*translator).cardinalTanslations); err != nil {
+		if err := ut.exportPlurals(trans, l, RuleTypeCardinal, locale.(*translator).cardinalTanslations,
+			ctx); err != nil {
+
 			return err
 		}
-		if err := ut.exportPlurals(trans, l, RuleTypeOrdinal, locale.(*translator).ordinalTanslations); err != nil {
+		if err := ut.exportPlurals(trans, l, RuleTypeOrdinal, locale.(*translator).ordinalTanslations,
+			ctx); err != nil {
+
 			return err
 		}
-		if err := ut.exportPlurals(trans, l, RuleTypeRange, locale.(*translator).rangeTanslations); err != nil {
+		if err := ut.exportPlurals(trans, l, RuleTypeRange, locale.(*translator).rangeTanslations, ctx); err != nil {
 			return err
 		}
 
@@ -83,8 +102,9 @@ func (ut *UniversalTranslator) Export(path string) error {
 		if err := toml.NewEncoder(buf).Encode(trans); err != nil {
 			return &ErrExportWriteFailure{Path: path, Err: err}
 		}
-		if err := ioutil.WriteFile(filepath.Join(path, fmt.Sprintf("%s.toml", locale.Locale())),
-			buf.Bytes(), 0644); err != nil {
+		file := filepath.Join(path, fmt.Sprintf("%s.toml", l))
+		cl.Debug().Str("file", file).Msgf("writing translation file: %s", file)
+		if err := ioutil.WriteFile(file, buf.Bytes(), 0644); err != nil {
 			return &ErrExportWriteFailure{Path: path, Err: err}
 		}
 	}
@@ -97,20 +117,33 @@ func (ut *UniversalTranslator) Export(path string) error {
 //
 // The following errors are returned by this function:
 // ErrImportPathFailure, any error from the ImportFromReader() function
-func (ut *UniversalTranslator) Import(path string) error {
+func (ut *UniversalTranslator) Import(path string, ctx context.Context) error {
+	logger := log.Logger
+	if l := zerolog.Ctx(ctx); l != nil {
+		logger = *l
+	}
+	logger = logger.With().Str("path", path).Logger()
+
 	fi, err := os.Stat(path)
 	if err != nil {
-		return &ErrImportPathFailure{Path: path, Err: err}
+		e := &ErrImportPathFailure{Path: path, Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 
 	// declare the function that will be called to process a file
 	processFn := func(filename string) error {
+		l := logger.With().Str("file", filename).Logger()
+
+		l.Debug().Msgf("loading translation file: %s")
 		f, err := os.Open(filename)
 		if err != nil {
-			return &ErrImportPathFailure{Path: path, Err: err}
+			e := &ErrImportPathFailure{Path: path, Err: err}
+			l.Error().Err(e.Err).Msg(e.Error())
+			return e
 		}
 		defer f.Close()
-		if err := ut.ImportFromReader(f); err != nil {
+		if err := ut.ImportFromReader(f, ctx); err != nil {
 			var e *ErrImportReadFailure
 			if errors.As(err, &e) {
 				e.Path = path
@@ -144,19 +177,29 @@ func (ut *UniversalTranslator) Import(path string) error {
 // The following errors are returned by this function:
 // ErrImportReadFailure, ErrLocaleNotRegistered, ErrInvalidRuleType, any error from the translator's Add(),
 // AddCardinal(), AddOrdinal() or AddRange() functions
-func (ut *UniversalTranslator) ImportFromReader(reader io.Reader) error {
+func (ut *UniversalTranslator) ImportFromReader(reader io.Reader, ctx context.Context) error {
+	logger := log.Logger
+	if l := zerolog.Ctx(ctx); l != nil {
+		logger = *l
+	}
+
 	// unmarshal the data
 	trans := translations{}
 	if _, err := toml.NewDecoder(reader).Decode(&trans); err != nil {
-		return &ErrImportReadFailure{Err: err}
+		e := &ErrImportReadFailure{Err: err}
+		logger.Error().Err(e.Err).Msg(e.Error())
+		return e
 	}
 
 	// add each translation found in the reader
 	for key, t := range trans {
 		locale, found := ut.FindTranslator(t.Locale)
 		if !found {
-			return &ErrLocaleNotRegistered{Locale: t.Locale}
+			e := &ErrLocaleNotRegistered{Locale: t.Locale}
+			logger.Error().Err(e).Msg(e.Error())
+			return e
 		}
+		logger.Debug().Str("locale", t.Locale).Msgf("importing translations for locale: %s", t.Locale)
 
 		// parse the type of rule
 		var addFn func(interface{}, string, locales.PluralRule, bool) error
@@ -173,7 +216,9 @@ func (ut *UniversalTranslator) ImportFromReader(reader io.Reader) error {
 		case RuleTypeRange:
 			addFn = locale.AddRange
 		default:
-			return &ErrInvalidRuleType{RuleType: t.RuleType}
+			e := &ErrInvalidRuleType{RuleType: t.RuleType}
+			logger.Error().Err(e).Msg(e.Error())
+			return e
 		}
 
 		// add the translations
@@ -217,12 +262,19 @@ func (ut *UniversalTranslator) ImportFromReader(reader io.Reader) error {
 // The following errors are returned by this function:
 // ErrKeyIsNotString
 func (ut *UniversalTranslator) exportPlurals(trans translations, locale, ruleType string,
-	plurals map[interface{}][]*transText) error {
+	plurals map[interface{}][]*transText, ctx context.Context) error {
+
+	logger := log.Logger
+	if l := zerolog.Ctx(ctx); l != nil {
+		logger = *l
+	}
 
 	for k, pluralTrans := range plurals {
 		key, ok := k.(string)
 		if !ok {
-			return &ErrKeyIsNotString{}
+			e := &ErrKeyIsNotString{}
+			logger.Error().Err(e).Msg(e.Error())
+			return e
 		}
 		if _, ok := trans[key]; !ok {
 			trans[key] = &translation{}

@@ -1,6 +1,7 @@
 package i18n_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/go-playground/locales"
@@ -9,10 +10,12 @@ import (
 )
 
 func TestImportFile(t *testing.T) {
+	ctx := context.TODO()
+
 	// load translations
 	en := en.New()
 	ut := i18n.NewUniversalTranslator(en, en)
-	if err := ut.Import("./examples/en.toml"); err != nil {
+	if err := ut.Import("./examples/en.toml", ctx); err != nil {
 		t.Errorf("error while importing TOML file: %s", err.Error())
 	}
 
@@ -34,6 +37,8 @@ func TestImportFile(t *testing.T) {
 }
 
 func TestExportFile(t *testing.T) {
+	ctx := context.TODO()
+
 	// load translations
 	en := en.New()
 	ut := i18n.NewUniversalTranslator(en, en)
@@ -65,7 +70,7 @@ func TestExportFile(t *testing.T) {
 	}
 
 	// export messages
-	if err := ut.Export("./examples/out"); err != nil {
+	if err := ut.Export("./examples/out", ctx); err != nil {
 		t.Errorf("failed to export translations: %s", err.Error())
 	}
 	t.Logf("exported translations to ./examples/out")
