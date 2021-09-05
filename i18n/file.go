@@ -135,7 +135,7 @@ func (ut *UniversalTranslator) Import(path string, ctx context.Context) error {
 	processFn := func(filename string) error {
 		l := logger.With().Str("file", filename).Logger()
 
-		l.Debug().Msgf("loading translation file: %s")
+		l.Debug().Msgf("loading translation file: %s", filename)
 		f, err := os.Open(filename)
 		if err != nil {
 			e := &ErrImportPathFailure{Path: path, Err: err}
