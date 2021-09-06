@@ -4,30 +4,33 @@ import "fmt"
 
 // Object error codes (1251-1500)
 const (
-	ErrDecodeFailureCode              = 1251
-	ErrGenerateCipherFailureCode      = 1252
-	ErrGenerateGCMFailureCode         = 1253
-	ErrDecryptFailureCode             = 1254
-	ErrGenerateRandomKeyFailureCode   = 1255
-	ErrGenerateNonceFailureCode       = 1256
-	ErrReadFileFailureCode            = 1257
-	ErrEncryptFailureCode             = 1258
-	ErrGenerateIVFailureCode          = 1259
-	ErrParseCertificateFailureCode    = 1260
-	ErrGeneratePGPKeyFailureCode      = 1261
-	ErrLockPGPKeyFailureCode          = 1262
-	ErrArmorPGPKeyFailureCode         = 1263
-	ErrLoadPGPKeyFailureCode          = 1264
-	ErrUnlockPGPKeyFailureCode        = 1265
-	ErrGetPGPKeyFailureCode           = 1266
-	ErrExtractPublicKeyFailureCode    = 1267
-	ErrSignDataFailureCode            = 1268
-	ErrInvalidSignatureCode           = 1269
-	ErrLoadCertificateFailureCode     = 1270
-	ErrInvalidCertificateCode         = 1271
-	ErrGeneratePrivateKeyFailureCode  = 1272
-	ErrGenerateCertificateFailureCode = 1273
-	ErrEncodeFailureCode              = 1274
+	ErrDecodeFailureCode                     = 1251
+	ErrGenerateCipherFailureCode             = 1252
+	ErrGenerateGCMFailureCode                = 1253
+	ErrDecryptFailureCode                    = 1254
+	ErrGenerateRandomKeyFailureCode          = 1255
+	ErrGenerateNonceFailureCode              = 1256
+	ErrReadFileFailureCode                   = 1257
+	ErrEncryptFailureCode                    = 1258
+	ErrGenerateIVFailureCode                 = 1259
+	ErrParseCertificateFailureCode           = 1260
+	ErrGeneratePGPKeyFailureCode             = 1261
+	ErrLockPGPKeyFailureCode                 = 1262
+	ErrArmorPGPKeyFailureCode                = 1263
+	ErrLoadPGPKeyFailureCode                 = 1264
+	ErrUnlockPGPKeyFailureCode               = 1265
+	ErrGetPGPKeyFailureCode                  = 1266
+	ErrExtractPublicKeyFailureCode           = 1267
+	ErrSignDataFailureCode                   = 1268
+	ErrInvalidSignatureCode                  = 1269
+	ErrLoadCertificateFailureCode            = 1270
+	ErrInvalidCertificateCode                = 1271
+	ErrGeneratePrivateKeyFailureCode         = 1272
+	ErrGenerateCertificateFailureCode        = 1273
+	ErrEncodeFailureCode                     = 1274
+	ErrSignJWTTokenFailureCode               = 3004
+	ErrInvalidJWTTokenSignatureAlgorithmCode = 3005
+	ErrInvalidJWTTokenClaimsCode             = 3006
 )
 
 // ErrDecodeFailure occurs when encoded data cannot be decoded.
@@ -403,4 +406,52 @@ func (e *ErrEncodeFailure) Error() string {
 // Code returns the corresponding error code.
 func (e *ErrEncodeFailure) Code() int {
 	return ErrEncodeFailureCode
+}
+
+// ErrSignJWTTokenFailure occurs when a failure occurs while signing a token.
+type ErrSignJWTTokenFailure struct {
+	Err error
+}
+
+// Error returns the string version of the error.
+func (e *ErrSignJWTTokenFailure) Error() string {
+	return fmt.Sprintf("failed to sign JWT token: %s", e.Err)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrSignJWTTokenFailure) Code() int {
+	return ErrSignJWTTokenFailureCode
+}
+
+// ErrInvalidTokenSignatureAlgorithm occurs when a token is signed with one algorithm but a different algorithm
+// was expected.
+type ErrInvalidTokenSignatureAlgorithm struct {
+	Alg      interface{}
+	Expected string
+}
+
+// Error returns the string version of the error.
+func (e *ErrInvalidTokenSignatureAlgorithm) Error() string {
+	return fmt.Sprintf("JWT token was signed using a the '%v' algorithm but '%s' was expected", e.Alg, e.Expected)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrInvalidTokenSignatureAlgorithm) Code() int {
+	return ErrInvalidJWTTokenSignatureAlgorithmCode
+}
+
+// ErrInvalidTokenClaims occurs when a token is signed with one algorithm but a different algorithm
+// was expected.
+type ErrInvalidTokenClaims struct {
+	Err error
+}
+
+// Error returns the string version of the error.
+func (e *ErrInvalidTokenClaims) Error() string {
+	return fmt.Sprintf("one or more JWT token claims are invalid: %s", e.Err)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrInvalidTokenClaims) Code() int {
+	return ErrInvalidJWTTokenClaimsCode
 }
