@@ -12,6 +12,7 @@ require (
 	github.com/go-redis/redis_rate/v9 v9.1.1
 	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/google/uuid v1.1.2
+	github.com/ip2location/ip2location-go/v9 v9.1.0
 	github.com/stretchr/testify v1.7.1-0.20210427113832-6241f9ab9942 // indirect
 	go.imperva.dev/zerolog v1.25.1
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d

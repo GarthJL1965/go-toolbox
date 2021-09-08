@@ -39,11 +39,11 @@ type RedisRateLimiterOptions struct {
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
 
-	// KeyFn is called to determine the name of the key in which to store client request rate information. This would
-	// typically be an API key or a client IP address or some combination thereof.
+	// KeyLookupHandler is called to determine the name of the key in which to store client request rate information.
+	// This would typically be an API key or a client IP address or some combination thereof.
 	//
 	// This field must NOT be nil.
-	KeyFn func(*gin.Context) string
+	KeyLookupHandler func(*gin.Context) string
 
 	// Rate indicates the rate limit settings.
 	//
@@ -75,7 +75,7 @@ type RedisRateLimiterOptions struct {
 func RedisRateLimiter(options RedisRateLimiterOptions) gin.HandlerFunc {
 	limiter := redisrate.NewLimiter(options.Client)
 	return func(c *gin.Context) {
-		key := options.KeyFn(c)
+		key := options.KeyLookupHandler(c)
 		logger := tbcontext.GetLogger(c).With().Str("limiter_key", key).Logger()
 
 		// determine whether or not to allow the connection

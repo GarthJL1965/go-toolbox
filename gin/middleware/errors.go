@@ -1,11 +1,15 @@
 package middleware
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 )
 
 // Object error codes (3501-3750)
-const ()
+const (
+	ErrLoadIPLocationDBCode = 3501
+)
 
 // ErrorHandler is called when an error occurs within certain middlewares.
 //
@@ -17,3 +21,19 @@ const ()
 // The handler should return true if the middleware should continue running or false if it should return
 // immediately.
 type ErrorHandler func(*gin.Context, string, error) bool
+
+// ErrLoadIPLocationDB occurs when there is an error loading the IP location database.
+type ErrLoadIPLocationDB struct {
+	Path string
+	Err  error
+}
+
+// Error returns the string version of the error.
+func (e *ErrLoadIPLocationDB) Error() string {
+	return fmt.Sprintf("failed to load database file '%s': %s", e.Path, e.Err.Error())
+}
+
+// Code returns the corresponding error code.
+func (e *ErrLoadIPLocationDB) Code() int {
+	return ErrLoadIPLocationDBCode
+}

@@ -8,22 +8,23 @@ import (
 
 // Object error codes (1501-1750)
 const (
-	ErrKeyIsNotStringCode           = 1501
-	ErrUnknownTranslationCode       = 1502
-	ErrExistingTranslatorCode       = 1503
-	ErrConflictingTranslationCode   = 1504
-	ErrRangeTranslationCode         = 1505
-	ErrOrdinalTranslationCode       = 1506
-	ErrCardinalTranslationCode      = 1507
-	ErrMissingPluralTranslationCode = 1508
-	ErrMissingBraceCode             = 1509
-	ErrBadParamSyntaxCode           = 1510
-	ErrLocaleNotRegisteredCode      = 1511
-	ErrInvalidRuleTypeCode          = 1512
-	ErrExportPathFailureCode        = 1513
-	ErrExportWriteFailureCode       = 1514
-	ErrImportPathFailureCode        = 1515
-	ErrImportReadFailureCode        = 1516
+	ErrKeyIsNotStringCode                       = 1501
+	ErrUnknownTranslationCode                   = 1502
+	ErrExistingTranslatorCode                   = 1503
+	ErrConflictingTranslationCode               = 1504
+	ErrRangeTranslationCode                     = 1505
+	ErrOrdinalTranslationCode                   = 1506
+	ErrCardinalTranslationCode                  = 1507
+	ErrMissingPluralTranslationCode             = 1508
+	ErrMissingBraceCode                         = 1509
+	ErrBadParamSyntaxCode                       = 1510
+	ErrLocaleNotRegisteredCode                  = 1511
+	ErrInvalidRuleTypeCode                      = 1512
+	ErrExportPathFailureCode                    = 1513
+	ErrExportWriteFailureCode                   = 1514
+	ErrImportPathFailureCode                    = 1515
+	ErrImportReadFailureCode                    = 1516
+	ErrRegisterValidationTranslationFailureCode = 1517
 )
 
 // ErrKeyIsNotString occurs when a translation key is not a string.
@@ -288,4 +289,23 @@ func (e *ErrImportReadFailure) Error() string {
 // Code returns the corresponding error code.
 func (e *ErrImportReadFailure) Code() int {
 	return ErrImportReadFailureCode
+}
+
+// ErrRegisterValidationTranslationFailure occurs when a failure is detected while registering a validation tag's
+// error message translation.
+type ErrRegisterValidationTranslationFailure struct {
+	Err    error
+	Tag    string
+	Locale string
+}
+
+// Error returns the string version of the error.
+func (e *ErrRegisterValidationTranslationFailure) Error() string {
+	return fmt.Sprintf("failed to register translation for validation tag '%s': %s (locale: %s)", e.Tag,
+		e.Err.Error(), e.Locale)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrRegisterValidationTranslationFailure) Code() int {
+	return ErrRegisterValidationTranslationFailureCode
 }

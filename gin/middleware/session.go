@@ -30,7 +30,7 @@ type RedisSessionOptions struct {
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
 
-	// GetSessionIDFn is called to retrieve the ID for the session.
+	// SessionIDLookupHandler is called to retrieve the ID for the session.
 	//
 	// This function should return the session ID with a nil error on success or an empty string with an error on
 	// failure.
@@ -39,7 +39,7 @@ type RedisSessionOptions struct {
 	// inspecting a JWT claim or simply using a cookie.
 	//
 	// This field must NOT be nil.
-	GetSessionIDFn func(*gin.Context) (string, error)
+	SessionIDLookupHandler func(*gin.Context) (string, error)
 
 	// TTL indicates the length session data will be stored before it expires.
 	TTL time.Duration
@@ -77,7 +77,7 @@ func RedisSession(options RedisSessionOptions) gin.HandlerFunc {
 		logger := tbcontext.GetLogger(c)
 
 		// get the session ID using the handler - session ID could come from a JWT or cookie or elsewhere
-		id, err := options.GetSessionIDFn(c)
+		id, err := options.SessionIDLookupHandler(c)
 		if err != nil {
 			errorCode := "get-session-id-failure"
 			c.Set(RateLimitErrorCodeHeader, errorCode)

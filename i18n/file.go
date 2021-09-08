@@ -25,10 +25,9 @@ const (
 )
 
 type translation struct {
-	Description      string `toml:"description,omitempty"`
 	Locale           string `toml:"locale"`
 	OverrideExisting bool   `toml:"override,omitempty"`
-	RuleType         string `toml:"type,omitempty"`
+	RuleType         string `toml:"rule,omitempty"`
 	Zero             string `toml:"zero,omitempty"`
 	One              string `toml:"one,omitempty"`
 	Two              string `toml:"two,omitempty"`
@@ -111,7 +110,7 @@ func (ut *UniversalTranslator) Export(path string, ctx context.Context) error {
 	return nil
 }
 
-// Import reads the translations out of a file or directory on disk.
+// Import reads the translations from a file or directory on disk.
 //
 // If the path is a directory, any .toml files located in the directory will be imported.
 //
@@ -178,6 +177,7 @@ func (ut *UniversalTranslator) Import(path string, ctx context.Context) error {
 // ErrImportReadFailure, ErrLocaleNotRegistered, ErrInvalidRuleType, any error from the translator's Add(),
 // AddCardinal(), AddOrdinal() or AddRange() functions
 func (ut *UniversalTranslator) ImportFromReader(reader io.Reader, ctx context.Context) error {
+
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -203,7 +203,8 @@ func (ut *UniversalTranslator) ImportFromReader(reader io.Reader, ctx context.Co
 
 		// parse the type of rule
 		var addFn func(interface{}, string, locales.PluralRule, bool) error
-		switch strings.ToLower(t.RuleType) {
+		ruleType := strings.ToLower(t.RuleType)
+		switch ruleType {
 		case "", RuleTypePlain:
 			if err := locale.Add(key, t.Other, t.OverrideExisting); err != nil {
 				return err
