@@ -8,7 +8,7 @@ and utilizes [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0
 
 No unreleased changes
 
-## v0.1.6 (2021-09-08)
+## v0.1.7 (2021-09-08)
 
 ### Notes
 
