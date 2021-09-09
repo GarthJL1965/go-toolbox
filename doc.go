@@ -21,7 +21,7 @@
 //
 // The following error codes are allocated for each package:
 //
-//  ◽ collection: 1000-1250
+//  ◽ collection: 1001-1250
 //  ◽ crypto: 1251-1500
 //  ◽ gin: 2751-3000
 //  ◽ gin/api: 3001-3250
