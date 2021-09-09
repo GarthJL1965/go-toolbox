@@ -59,13 +59,13 @@ type RedisRateLimiterOptions struct {
 // the RateLimitErrorMessageHeader will contain the error message. The following error "codes" are used by this
 // middleware for both the header and when calling the ErrorHandler, if one is supplied:
 //
-// - Failure while invoking rate limiter Allow function: rate-limiter-failure
-// - Rate limit reached: rate-limited
+//  ◽ Failure while invoking rate limiter Allow function: rate-limiter-failure
+//  ◽ Rate limit reached: rate-limited
 //
 // If an ErrorHandler is not supplied, the request will be aborted with the following HTTP status codes:
 //
-// - Failure while invoking rate limiter Allow function: 500
-// - Rate limit reached: 429
+//  ◽ Failure while invoking rate limiter Allow function: 500
+//  ◽ Rate limit reached: 429
 //
 // If an error handler is supplied, it is responsible for aborting the request or returning an appropriate
 // response to the caller.

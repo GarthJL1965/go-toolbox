@@ -107,7 +107,7 @@ func (w *ConditionalWaiter) Run(ctx context.Context) {
 			rounds++
 
 			if rounds <= 5 {
-				logger.Info().Msg("no matching resources found yet - retrying in 2 seconds...")
+				logger.Info().Msg("no matching resources found yet; retrying in 2 seconds...")
 				time.Sleep(time.Millisecond * 2000)
 			} else {
 				e := &ErrResourceWaitFailure{

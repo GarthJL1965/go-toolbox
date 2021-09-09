@@ -77,13 +77,13 @@ type IPFilterOptions struct {
 // IPFilterErrorMessageHeader will contain the error message. The following error "codes" are used by this
 // middleware for both the header and when calling the ErrorHandler, if one is supplied:
 //
-// - Failure while retrieving the client's IP address: client-ip-lookup-failure
-// - Failure while retrieving the client IP's location information: ip-location-lookup-failure
+//  ◽ Failure while retrieving the client's IP address: client-ip-lookup-failure
+//  ◽ Failure while retrieving the client IP's location information: ip-location-lookup-failure
 //
 // If an ErrorHandler is not supplied, the request will be aborted with the following HTTP status codes:
 //
-// - Failure while retrieving the client's IP address: 500
-// - Failure while retrieving the client IP's location information: 500
+//  ◽ Failure while retrieving the client's IP address: 500
+//  ◽ Failure while retrieving the client IP's location information: 500
 //
 // If an error handler is supplied, it is responsible for aborting the request or returning an appropriate
 // response to the caller.

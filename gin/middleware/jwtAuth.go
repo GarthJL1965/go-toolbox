@@ -83,21 +83,21 @@ type JWTAuthOptions struct {
 // the JWTAuthErrorMessageHeader will contain the error message. The following error "codes" are used by this
 // middleware for both the header and when calling the ErrorHandler, if one is supplied:
 //
-// - Token is missing from the request: jwt-missing-auth-token
-// - Token validation fails: jwt-validation-failed
-// - Error returned by authentication handler: jwt-authentication-failed
-// - Caller is not authenticated: jwt-not-authenticated
-// - Error returned by authorization handler: jwt-authorization-failed
-// - Caller is not authorized: jwt-not-authorized
+//  ◽ Token is missing from the request: jwt-missing-auth-token
+//  ◽ Token validation fails: jwt-validation-failed
+//  ◽ Error returned by authentication handler: jwt-authentication-failed
+//  ◽ Caller is not authenticated: jwt-not-authenticated
+//  ◽ Error returned by authorization handler: jwt-authorization-failed
+//  ◽ Caller is not authorized: jwt-not-authorized
 //
 // If an ErrorHandler is not supplied, the request will be aborted with the following HTTP status codes:
 //
-// - Token is missing from the request: 401
-// - Token validation fails: 401
-// - Error returned by authentication handler: 401
-// - Caller is not authenticated: 401
-// - Error returned by authorization handler: 403
-// - Caller is not authorized: 403
+//  ◽ Token is missing from the request: 401
+//  ◽ Token validation fails: 401
+//  ◽ Error returned by authentication handler: 401
+//  ◽ Caller is not authenticated: 401
+//  ◽ Error returned by authorization handler: 403
+//  ◽ Caller is not authorized: 403
 //
 // If an error handler is supplied, it is responsible for aborting the request or returning an appropriate
 // response to the caller.

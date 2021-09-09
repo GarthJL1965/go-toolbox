@@ -7,11 +7,11 @@
 //
 // To determine the specific type of error that was returned, you can use 1 of 3 methods:
 //
-// - Use the errors.Is() method with new(ErrType) as the second argument where ErrType is the actual type of error
+//  ◽ Use the errors.Is() method with new(ErrType) as the second argument where ErrType is the actual type of error
 // that is expected.
-// - Use the errors.As() method to determine if you can convert the error into the given object. The advantage of this
+//  ◽ Use the errors.As() method to determine if you can convert the error into the given object. The advantage of this
 // method is that you can then also access each error's custom fields.
-// - Cast the error object to an ExtendedError object and then use the Code() method to compare the error code to the
+//  ◽ Cast the error object to an ExtendedError object and then use the Code() method to compare the error code to the
 // corresponding error code constant defined as the error type with 'Code' appended to it
 // (eg: ErrDoRequestFailureCode, ErrResourceWaitFailureCode)
 //
@@ -21,16 +21,16 @@
 //
 // The following error codes are allocated for each package:
 //
-// - collection: 1000-1250
-// - crypto: 1251-1500
-// - gin: 2751-3000
-// - gin/api: 3001-3250
-// - gin/context: 3251-3500
-// - gin/middleware: 3501-3750
-// - i18n: 1501-1750
-// - k8s: 1751-2000
-// - net: 2001-2250
-// - net/http: 2251-2500
-// - strings: 2501-2750
+//  ◽ collection: 1000-1250
+//  ◽ crypto: 1251-1500
+//  ◽ gin: 2751-3000
+//  ◽ gin/api: 3001-3250
+//  ◽ gin/context: 3251-3500
+//  ◽ gin/middleware: 3501-3750
+//  ◽ i18n: 1501-1750
+//  ◽ k8s: 1751-2000
+//  ◽ net: 2001-2250
+//  ◽ net/http: 2251-2500
+//  ◽ strings: 2501-2750
 //
 package toolbox
