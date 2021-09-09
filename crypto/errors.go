@@ -38,6 +38,11 @@ type ErrDecodeFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrDecodeFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrDecodeFailure) Error() string {
 	return fmt.Sprintf("failed to decode data: %s", e.Err.Error())
@@ -51,6 +56,11 @@ func (e *ErrDecodeFailure) Code() int {
 // ErrGenerateCipherFailure occurs when creation of a new cipher fails.
 type ErrGenerateCipherFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGenerateCipherFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -68,6 +78,11 @@ type ErrGenerateGCMFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGenerateGCMFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrGenerateGCMFailure) Error() string {
 	return fmt.Sprintf("failed to wrap block cipher in GCM: %s", e.Err.Error())
@@ -81,6 +96,11 @@ func (e *ErrGenerateGCMFailure) Code() int {
 // ErrDecryptFailure occurs when data cannot be decrypted.
 type ErrDecryptFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrDecryptFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -98,6 +118,11 @@ type ErrGenerateRandomKeyFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGenerateRandomKeyFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrGenerateRandomKeyFailure) Error() string {
 	return fmt.Sprintf("failed to generate random key: %s", e.Err.Error())
@@ -111,6 +136,11 @@ func (e *ErrGenerateRandomKeyFailure) Code() int {
 // ErrGenerateNonceFailure occurs when a nonce for encryption cannot be generated.
 type ErrGenerateNonceFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGenerateNonceFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -129,6 +159,11 @@ type ErrReadFileFailure struct {
 	File string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrReadFileFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrReadFileFailure) Error() string {
 	return fmt.Sprintf("failed to read file '%s': %s", e.File, e.Err.Error())
@@ -142,6 +177,11 @@ func (e *ErrReadFileFailure) Code() int {
 // ErrEncryptFailure occurs when data fails to be encrypted.
 type ErrEncryptFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrEncryptFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -159,6 +199,11 @@ type ErrGenerateIVFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGenerateIVFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrGenerateIVFailure) Error() string {
 	return fmt.Sprintf("failed to generate initialization vector: %s", e.Err.Error())
@@ -172,6 +217,11 @@ func (e *ErrGenerateIVFailure) Code() int {
 // ErrParseCertificateFailure occurs when one or more certificates cannot be parsed
 type ErrParseCertificateFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrParseCertificateFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -193,6 +243,11 @@ type ErrGeneratePGPKeyFailure struct {
 	Err     error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGeneratePGPKeyFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrGeneratePGPKeyFailure) Error() string {
 	return fmt.Sprintf("failed to generate PGP key: %s", e.Err.Error())
@@ -210,6 +265,11 @@ type ErrLockPGPKeyFailure struct {
 	KeyType string
 	Bits    int
 	Err     error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrLockPGPKeyFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -231,6 +291,11 @@ type ErrArmorPGPKeyFailure struct {
 	Err     error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrArmorPGPKeyFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrArmorPGPKeyFailure) Error() string {
 	return fmt.Sprintf("failed to armor PGP key: %s", e.Err.Error())
@@ -244,6 +309,11 @@ func (e *ErrArmorPGPKeyFailure) Code() int {
 // ErrLoadPGPKeyFailure occurs when a PGP key cannot be loaded.
 type ErrLoadPGPKeyFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrLoadPGPKeyFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -261,6 +331,11 @@ type ErrUnlockPGPKeyFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrUnlockPGPKeyFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrUnlockPGPKeyFailure) Error() string {
 	return fmt.Sprintf("failed to unlock PGP key: %s", e.Err.Error())
@@ -274,6 +349,11 @@ func (e *ErrUnlockPGPKeyFailure) Code() int {
 // ErrGetPGPKeyFailure occurs when a PGP key cannot be retrieved.
 type ErrGetPGPKeyFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGetPGPKeyFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -291,6 +371,11 @@ type ErrExtractPublicKeyFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrExtractPublicKeyFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrExtractPublicKeyFailure) Error() string {
 	return fmt.Sprintf("failed to extract public key from certificate: %s", e.Err.Error())
@@ -304,6 +389,11 @@ func (e *ErrExtractPublicKeyFailure) Code() int {
 // ErrSignDataFailure occurs when signing data with a private key fails.
 type ErrSignDataFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrSignDataFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -321,6 +411,11 @@ type ErrInvalidSignature struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrInvalidSignature) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrInvalidSignature) Error() string {
 	return fmt.Sprintf("the signature for the data is invalid: %s", e.Err.Error())
@@ -334,6 +429,11 @@ func (e *ErrInvalidSignature) Code() int {
 // ErrLoadCertificateFailure occurs when one or more certificates cannot be loaded.
 type ErrLoadCertificateFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrLoadCertificateFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -353,6 +453,11 @@ type ErrInvalidCertificate struct {
 	Err                error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrInvalidCertificate) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrInvalidCertificate) Error() string {
 	return fmt.Sprintf("failed to validate certificate(s): %s", e.Err.Error())
@@ -366,6 +471,11 @@ func (e *ErrInvalidCertificate) Code() int {
 // ErrGeneratePrivateKeyFailure occurs when a private key for a certificate cannot be generated.
 type ErrGeneratePrivateKeyFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrGeneratePrivateKeyFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -383,6 +493,11 @@ type ErrGenerateCertificateFailure struct {
 	Err error
 }
 
+// InternalError the internal standard error object if there is one or nil if none is set.
+func (e *ErrGenerateCertificateFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrGenerateCertificateFailure) Error() string {
 	return fmt.Sprintf("failed to generate certificate: %s", e.Err.Error())
@@ -398,6 +513,11 @@ type ErrEncodeFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrEncodeFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrEncodeFailure) Error() string {
 	return fmt.Sprintf("failed to encode data: %s", e.Err.Error())
@@ -411,6 +531,11 @@ func (e *ErrEncodeFailure) Code() int {
 // ErrSignJWTTokenFailure occurs when a failure occurs while signing a token.
 type ErrSignJWTTokenFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrSignJWTTokenFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -430,6 +555,11 @@ type ErrInvalidTokenSignatureAlgorithm struct {
 	Expected string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrInvalidTokenSignatureAlgorithm) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrInvalidTokenSignatureAlgorithm) Error() string {
 	return fmt.Sprintf("JWT token was signed using a the '%v' algorithm but '%s' was expected", e.Alg, e.Expected)
@@ -444,6 +574,11 @@ func (e *ErrInvalidTokenSignatureAlgorithm) Code() int {
 // was expected.
 type ErrInvalidTokenClaims struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrInvalidTokenClaims) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.

@@ -28,6 +28,11 @@ type ErrLoadIPLocationDB struct {
 	Err  error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrLoadIPLocationDB) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrLoadIPLocationDB) Error() string {
 	return fmt.Sprintf("failed to load database file '%s': %s", e.Path, e.Err.Error())

@@ -15,6 +15,11 @@ type ErrWaitConditionInvalid struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrWaitConditionInvalid) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrWaitConditionInvalid) Error() string {
 	if e.Err != nil {
@@ -34,6 +39,11 @@ type ErrResourceWaitFailure struct {
 	Name      string
 	Selectors string
 	Err       error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrResourceWaitFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.

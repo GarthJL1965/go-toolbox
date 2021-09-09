@@ -31,6 +31,11 @@ const (
 type ErrKeyIsNotString struct {
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrKeyIsNotString) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrKeyIsNotString) Error() string {
 	return "translation key must be a string"
@@ -46,6 +51,11 @@ type ErrUnknownTranslation struct {
 	Key string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrUnknownTranslation) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrUnknownTranslation) Error() string {
 	return fmt.Sprintf("unknown translation key: %s", e.Key)
@@ -59,6 +69,11 @@ func (e *ErrUnknownTranslation) Code() int {
 // ErrExistingTranslator occurs when there is a conflicting translator.
 type ErrExistingTranslator struct {
 	Locale string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrExistingTranslator) InternalError() error {
+	return nil
 }
 
 // Error returns the string version of the error.
@@ -79,6 +94,11 @@ type ErrConflictingTranslation struct {
 	Text   string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrConflictingTranslation) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrConflictingTranslation) Error() string {
 	return fmt.Sprintf("conflicting key '%s' rule '%s' with text '%s' for locale '%s', value being ignored",
@@ -93,6 +113,11 @@ func (e *ErrConflictingTranslation) Code() int {
 // ErrRangeTranslation occurs when there is a range translation error.
 type ErrRangeTranslation struct {
 	Text string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrRangeTranslation) InternalError() error {
+	return nil
 }
 
 // Error returns the string version of the error.
@@ -110,6 +135,11 @@ type ErrOrdinalTranslation struct {
 	Text string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrOrdinalTranslation) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrOrdinalTranslation) Error() string {
 	return e.Text
@@ -123,6 +153,11 @@ func (e *ErrOrdinalTranslation) Code() int {
 // ErrCardinalTranslation occurs when there is a cardinal translation error.
 type ErrCardinalTranslation struct {
 	Text string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrCardinalTranslation) InternalError() error {
+	return nil
 }
 
 // Error returns the string version of the error.
@@ -143,6 +178,11 @@ type ErrMissingPluralTranslation struct {
 	TranslationType string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrMissingPluralTranslation) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrMissingPluralTranslation) Error() string {
 	return fmt.Sprintf("missing '%s' plural rule '%s' for translation with key '%s' and locale '%s'",
@@ -160,6 +200,11 @@ type ErrMissingBrace struct {
 	Locale string
 	Key    interface{}
 	Text   string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrMissingBrace) InternalError() error {
+	return nil
 }
 
 // Error returns the string version of the error.
@@ -182,6 +227,11 @@ type ErrBadParamSyntax struct {
 	Text   string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrBadParamSyntax) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrBadParamSyntax) Error() string {
 	return fmt.Sprintf(
@@ -199,6 +249,11 @@ type ErrLocaleNotRegistered struct {
 	Locale string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrLocaleNotRegistered) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrLocaleNotRegistered) Error() string {
 	return fmt.Sprintf("locale '%s' is not registered.", e.Locale)
@@ -212,6 +267,11 @@ func (e *ErrLocaleNotRegistered) Code() int {
 // ErrInvalidRuleType occurs when an invalid rule type is detected in the translation file.
 type ErrInvalidRuleType struct {
 	RuleType string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrInvalidRuleType) InternalError() error {
+	return nil
 }
 
 // Error returns the string version of the error.
@@ -230,6 +290,11 @@ type ErrExportPathFailure struct {
 	Path string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrExportPathFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrExportPathFailure) Error() string {
 	return fmt.Sprintf("failed to create export path '%s': %s", e.Path, e.Err.Error())
@@ -244,6 +309,11 @@ func (e *ErrExportPathFailure) Code() int {
 type ErrExportWriteFailure struct {
 	Err  error
 	Path string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrExportWriteFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -262,6 +332,11 @@ type ErrImportPathFailure struct {
 	Path string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrImportPathFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrImportPathFailure) Error() string {
 	return fmt.Sprintf("failed to create import path '%s': %s", e.Path, e.Err.Error())
@@ -276,6 +351,11 @@ func (e *ErrImportPathFailure) Code() int {
 type ErrImportReadFailure struct {
 	Err  error
 	Path string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrImportReadFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -297,6 +377,11 @@ type ErrRegisterValidationTranslationFailure struct {
 	Err    error
 	Tag    string
 	Locale string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrRegisterValidationTranslationFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.

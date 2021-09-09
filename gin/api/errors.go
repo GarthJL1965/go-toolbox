@@ -15,6 +15,11 @@ type ErrUnsupportedRequestType struct {
 	SupportedTypes map[string]string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrUnsupportedRequestType) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrUnsupportedRequestType) Error() string {
 	if e.ContentType != "" {
@@ -34,6 +39,11 @@ type ErrUnsupportedResponseType struct {
 	SupportedTypes map[string]string
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrUnsupportedResponseType) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrUnsupportedResponseType) Error() string {
 	if e.Accept != "" {
@@ -51,6 +61,11 @@ func (e *ErrUnsupportedResponseType) Code() int {
 type ErrRequestResponseMismatch struct {
 	RequestType  string
 	ResponseType string
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrRequestResponseMismatch) InternalError() error {
+	return nil
 }
 
 // Error returns the string version of the error.

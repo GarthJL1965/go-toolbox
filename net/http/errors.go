@@ -20,6 +20,11 @@ type ErrParseUrlFailure struct {
 	Err error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrParseUrlFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrParseUrlFailure) Error() string {
 	return fmt.Sprintf("failed to parse URL '%s': %s", e.URL, e.Err.Error())
@@ -34,6 +39,11 @@ func (e *ErrParseUrlFailure) Code() int {
 type ErrProxyFailure struct {
 	URL string
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrProxyFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -51,6 +61,11 @@ type ErrCreateRequestFailure struct {
 	Method string
 	URL    string
 	Err    error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrCreateRequestFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -71,6 +86,11 @@ type ErrDoRequestFailure struct {
 	Err    error
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrDoRequestFailure) InternalError() error {
+	return e.Err
+}
+
 // Error returns the string version of the error.
 func (e *ErrDoRequestFailure) Error() string {
 	return fmt.Sprintf("failed to perform %s request to '%s': %s", e.Method, e.URL, e.Err.Error())
@@ -84,6 +104,11 @@ func (e *ErrDoRequestFailure) Code() int {
 // ErrReadResponseFailure occurs when there is an error reading a response body.
 type ErrReadResponseFailure struct {
 	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrReadResponseFailure) InternalError() error {
+	return e.Err
 }
 
 // Error returns the string version of the error.
@@ -101,6 +126,11 @@ type ErrStatusCodeNotOK struct {
 	StatusCode int
 }
 
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrStatusCodeNotOK) InternalError() error {
+	return nil
+}
+
 // Error returns the string version of the error.
 func (e *ErrStatusCodeNotOK) Error() string {
 	return fmt.Sprintf("HTTP request returned error code %d", e.StatusCode)
@@ -110,5 +140,3 @@ func (e *ErrStatusCodeNotOK) Error() string {
 func (e *ErrStatusCodeNotOK) Code() int {
 	return ErrReadResponseFailureCode
 }
-
-//
