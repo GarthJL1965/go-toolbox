@@ -21,6 +21,3 @@ require (
 	k8s.io/apimachinery v0.22.1
 	k8s.io/client-go v0.22.1
 )
-
-// TODO: remove this after development
-replace go.imperva.dev/zerolog => /home/josh/workspace/src/github.com/imperva-marketing/zerolog
