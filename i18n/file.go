@@ -199,7 +199,6 @@ func (ut *UniversalTranslator) ImportFromReader(reader io.Reader, ctx context.Co
 			logger.Error().Err(e).Msg(e.Error())
 			return e
 		}
-		logger.Debug().Str("locale", t.Locale).Msgf("importing translations for locale: %s", t.Locale)
 
 		// parse the type of rule
 		var addFn func(interface{}, string, locales.PluralRule, bool) error
