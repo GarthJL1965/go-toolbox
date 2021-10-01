@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
-	"go.impervaunity.io/toolbox/gin/context"
+	"go.impervaunity.io/pkg/toolbox/gin/context"
 )
 
 // Logger is a middleware function for logging requests to the server.

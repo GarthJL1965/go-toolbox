@@ -1,4 +1,4 @@
-module go.impervaunity.io/toolbox
+module go.impervaunity.io/pkg/toolbox
 
 go 1.16
 

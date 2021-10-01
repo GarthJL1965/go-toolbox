@@ -12,7 +12,7 @@ No unreleased changes
 
 ### Notes
 
-* Moved from `go.imperva.dev/toolbox` to `go.impervaunity.io/toolbox` to be consistent across all libraries.
+* Moved from `go.imperva.dev/toolbox` to `go.impervaunity.io/pkg/toolbox` to be consistent across all libraries.
   
 ## v0.1.10 (2021-09-09)
 

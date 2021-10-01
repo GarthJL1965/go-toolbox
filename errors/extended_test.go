@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-playground/locales/en"
-	"go.impervaunity.io/toolbox/i18n"
+	"go.impervaunity.io/pkg/toolbox/i18n"
 )
 
 func TestExtendedError(t *testing.T) {

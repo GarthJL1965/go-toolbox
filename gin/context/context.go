@@ -7,7 +7,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
-	"go.impervaunity.io/toolbox/crypto"
+	"go.impervaunity.io/pkg/toolbox/crypto"
 )
 
 var (

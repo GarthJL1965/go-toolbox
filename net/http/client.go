@@ -14,7 +14,7 @@ import (
 
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
-	"go.impervaunity.io/toolbox/crypto"
+	"go.impervaunity.io/pkg/toolbox/crypto"
 )
 
 // Client represents an HTTP client.
