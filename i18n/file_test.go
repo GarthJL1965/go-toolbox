@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-playground/locales"
 	"github.com/go-playground/locales/en"
-	"go.imperva.dev/toolbox/i18n"
+	"go.impervaunity.io/toolbox/i18n"
 )
 
 func TestImportFile(t *testing.T) {

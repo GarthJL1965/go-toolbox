@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"go.imperva.dev/toolbox/gin/context"
+	"go.impervaunity.io/toolbox/gin/context"
 )
 
 // VersionedResponseObject is an interface describing an object that can be used to render a response.

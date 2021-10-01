@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	redisrate "github.com/go-redis/redis_rate/v9"
-	tbcontext "go.imperva.dev/toolbox/gin/context"
+	tbcontext "go.impervaunity.io/toolbox/gin/context"
 )
 
 var (

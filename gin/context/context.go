@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
-	"go.imperva.dev/toolbox/crypto"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
+	"go.impervaunity.io/toolbox/crypto"
 )
 
 var (

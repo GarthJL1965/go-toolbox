@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
-	"go.imperva.dev/toolbox/gin/context"
-	"go.imperva.dev/toolbox/i18n"
+	"go.impervaunity.io/toolbox/gin/context"
+	"go.impervaunity.io/toolbox/i18n"
 	"golang.org/x/text/language"
 )
 

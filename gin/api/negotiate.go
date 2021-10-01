@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"go.imperva.dev/toolbox/gin/context"
+	"go.impervaunity.io/toolbox/gin/context"
 )
 
 // Well-known mime types.

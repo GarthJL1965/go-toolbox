@@ -3,7 +3,7 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go.imperva.dev/toolbox/gin/context"
+	"go.impervaunity.io/toolbox/gin/context"
 )
 
 var (

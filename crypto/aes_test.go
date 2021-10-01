@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"go.imperva.dev/toolbox/crypto"
+	"go.impervaunity.io/toolbox/crypto"
 )
 
 func TestRandomEncrypt(t *testing.T) {

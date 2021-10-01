@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ip2location "github.com/ip2location/ip2location-go/v9"
-	tbcontext "go.imperva.dev/toolbox/gin/context"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
+	tbcontext "go.impervaunity.io/toolbox/gin/context"
 )
 
 var (

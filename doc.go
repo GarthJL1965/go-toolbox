@@ -2,7 +2,7 @@
 // full functionality of the toolbox.
 //
 // Any method in the toolbox which returns an error object will return a custom error type implementing the
-// go.imperva.dev/toolbox/errors.ExtendedError interface. The specific errors returned by the method are noted in
+// go.impervaunity.io/toolbox/errors.ExtendedError interface. The specific errors returned by the method are noted in
 // its documentation. Each integer code corresponding the the specific error is unique across the entire toolbox.
 //
 // To determine the specific type of error that was returned, you can use 1 of 3 methods:

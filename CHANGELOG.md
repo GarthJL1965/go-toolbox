@@ -8,6 +8,12 @@ and utilizes [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0
 
 No unreleased changes
 
+## v0.2.0 (2021-10-01)
+
+### Notes
+
+* Moved from `go.imperva.dev/toolbox` to `go.impervaunity.io/toolbox` to be consistent across all libraries.
+  
 ## v0.1.10 (2021-09-09)
 
 ### Notes

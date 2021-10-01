@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.imperva.dev/toolbox/crypto"
-	tbcontext "go.imperva.dev/toolbox/gin/context"
+	"go.impervaunity.io/toolbox/crypto"
+	tbcontext "go.impervaunity.io/toolbox/gin/context"
 )
 
 var (

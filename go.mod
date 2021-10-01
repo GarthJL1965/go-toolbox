@@ -1,4 +1,4 @@
-module go.imperva.dev/toolbox
+module go.impervaunity.io/toolbox
 
 go 1.16
 
