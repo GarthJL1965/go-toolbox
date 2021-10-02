@@ -8,6 +8,12 @@ and utilizes [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0
 
 No unreleased changes
 
+## v0.3.1 (2021-10-02)
+
+## Features
+
+* Added `HereDoc()` and `HereDocf()` functions to the `strings` package.
+
 ## v0.3.0 (2021-10-01)
 
 ### Notes
