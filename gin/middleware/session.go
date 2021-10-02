@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	tbcontext "go.impervaunity.io/pkg/toolbox/gin/context"
+	tbcontext "go.imperva.dev/toolbox/gin/context"
 )
 
 var (

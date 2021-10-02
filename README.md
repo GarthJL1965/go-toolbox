@@ -4,7 +4,7 @@
   <p>A set of utility functions and classes shared between multiple Golang applications and tools</p>
   <hr />
   <br />
-  <a href="https://pkg.go.dev/go.impervaunity.io/pkg/toolbox" target="_blank">
+  <a href="https://pkg.go.dev/go.imperva.dev/toolbox" target="_blank">
     <img src="https://img.shields.io/badge/go-reference-2a7d98?style=for-the-badge" />
   </a>
   <a href="https://goreportcard.com/report/github.com/imperva-marketing/go-toolbox" target="_blank">
@@ -38,7 +38,7 @@
 
 `go-toolbox` contains common functions and classes that can be used by applications and utilities. This includes everything from advanced error handling to cryptographic functions to an enhanced HTTP client.
 
-Please review the [module documentation](https://pkg.go.dev/go.impervaunity.io/pkg/toolbox) for details on how to properly the functions and classes contained in this module.
+Please review the [module documentation](https://pkg.go.dev/go.imperva.dev/toolbox) for details on how to properly the functions and classes contained in this module.
 
 ## ✅ Requirements
 

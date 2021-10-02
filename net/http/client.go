@@ -12,9 +12,9 @@ import (
 	"net/http"
 	neturl "net/url"
 
+	"go.imperva.dev/toolbox/crypto"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
-	"go.impervaunity.io/pkg/toolbox/crypto"
 )
 
 // Client represents an HTTP client.
