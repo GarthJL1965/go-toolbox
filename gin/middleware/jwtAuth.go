@@ -32,7 +32,7 @@ type JWTAuthHandler func(*gin.Context, *crypto.JWTClaims, context.Context) (bool
 
 // JWTCreateAuthServiceHandler is an app-specific function that is used for creating the auth service required for
 // JWT validation.
-type JWTCreateAuthServiceHandler func(*gin.Context, context.Context) (crypto.JWTAuthService, error)
+type JWTCreateAuthServiceHandler func(*gin.Context, string, context.Context) (crypto.JWTAuthService, error)
 
 // JWTAuthOptions holds the options for configuring the JWTAuth middleware.
 type JWTAuthOptions struct {
@@ -143,7 +143,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 			return
 		}
-		authService, err := options.CreateAuthServiceHandler(c, ctx)
+		authService, err := options.CreateAuthServiceHandler(c, tokenString, ctx)
 		if err != nil {
 			errorCode := "jwt-create-auth-service-failed"
 			c.Header(JWTAuthErrorCodeHeader, errorCode)
