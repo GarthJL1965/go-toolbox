@@ -30,6 +30,10 @@ var (
 // JWTAuthHandler is an app-specific function that is used to verify authentication or authorization.
 type JWTAuthHandler func(*gin.Context, *crypto.JWTClaims, context.Context) (bool, error)
 
+// JWTCreateAuthServiceHandler is an app-specific function that is used for creating the auth service required for
+// JWT validation.
+type JWTCreateAuthServiceHandler func(*gin.Context, context.Context) (crypto.JWTAuthService, error)
+
 // JWTAuthOptions holds the options for configuring the JWTAuth middleware.
 type JWTAuthOptions struct {
 	// AuthnHandler is called to determine whether or not the user has successfully authenticated based on claims
@@ -40,9 +44,8 @@ type JWTAuthOptions struct {
 	// claims in the token.
 	AuthzHandler JWTAuthHandler
 
-	// AuthService defines the type of JWT authentication to use, which is typically based on HMAC or RSA or
-	// ECDSA public/private key signatures.
-	AuthService crypto.JWTAuthService
+	// CreateAuthService is a required function which is called to create the auth service used to validate the JWT.
+	CreateAuthServiceHandler JWTCreateAuthServiceHandler
 
 	// Cookie defines the cookie in which to store the JWT token.
 	Cookie struct {
@@ -84,6 +87,8 @@ type JWTAuthOptions struct {
 // middleware for both the header and when calling the ErrorHandler, if one is supplied:
 //
 //  ◽ Token is missing from the request: jwt-missing-auth-token
+//  ◽ Calling application failed to define a handler for creating the auth service: jwt-no-auth-service-defined
+//  ◽ Failure while creating the auth service: jwt-create-auth-service-failed
 //  ◽ Token validation fails: jwt-validation-failed
 //  ◽ Error returned by authentication handler: jwt-authentication-failed
 //  ◽ Caller is not authenticated: jwt-not-authenticated
@@ -93,6 +98,8 @@ type JWTAuthOptions struct {
 // If an ErrorHandler is not supplied, the request will be aborted with the following HTTP status codes:
 //
 //  ◽ Token is missing from the request: 401
+//  ◽ Calling application failed to define a handler for creating the auth service: 401
+//  ◽ Failure while creating the auth service: 401
 //  ◽ Token validation fails: 401
 //  ◽ Error returned by authentication handler: 401
 //  ◽ Caller is not authenticated: 401
@@ -125,7 +132,31 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			return
 		}
 		tokenString := authHeader[length:]
-		claims, err := options.AuthService.ValidateToken(tokenString, ctx)
+		if options.CreateAuthServiceHandler == nil {
+			errorCode := "jwt-no-auth-service-defined"
+			c.Header(JWTAuthErrorCodeHeader, errorCode)
+			err := errors.New("no handler to create an auth service for token verification was defined")
+			if options.ErrorHandler == nil {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			} else if options.ErrorHandler(c, errorCode, err) {
+				c.Next()
+			}
+			return
+		}
+		authService, err := options.CreateAuthServiceHandler(c, ctx)
+		if err != nil {
+			errorCode := "jwt-create-auth-service-failed"
+			c.Header(JWTAuthErrorCodeHeader, errorCode)
+			c.Header(JWTAuthErrorMessageHeader, err.Error())
+			logger.Error().Err(err).Msgf("failed to create auth service: %s", err.Error())
+			if options.ErrorHandler == nil {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			} else if options.ErrorHandler(c, errorCode, err) {
+				c.Next()
+			}
+			return
+		}
+		claims, err := authService.ValidateToken(tokenString, ctx)
 		if err != nil {
 			errorCode := "jwt-validation-failed"
 			c.Header(JWTAuthErrorCodeHeader, errorCode)

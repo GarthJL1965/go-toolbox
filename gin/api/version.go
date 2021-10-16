@@ -30,7 +30,7 @@ type VersionedHandlerMap map[string]VersionedHandler
 // Content-Type and Accept headers should be supplied in every API request.
 //
 // The following errors are returned by this function:
-// ErrRequestResposneMismatch, any error from the NegotiateRequestType() or NegotiateResponseType() functions
+// ErrRequestResponseMismatch, any error from the NegotiateRequestType() or NegotiateResponseType() functions
 func NegotiateVersion(c *gin.Context, handlers VersionedHandlerMap) (gin.HandlerFunc, error) {
 	logger := context.GetLogger(c)
 
