@@ -17,11 +17,8 @@ var (
 	// KeyLogger is the name of the context key holding the request-specific logger.
 	KeyLogger = "logger"
 
-	// KeyJWT is the name of the context key holding the JWT string.
+	// KeyJWT is the name of the context key holding the JWT token.
 	KeyJWT = "jwt"
-
-	// KeyJWTClaims is the name of the context key holding the JWT claim data.
-	KeyJWTClaims = "jwt_claims"
 
 	// KeySessionData is the name of the key where session data is stored.
 	KeySessionData = "session_data"
@@ -54,20 +51,10 @@ func GetLogger(c *gin.Context) zerolog.Logger {
 }
 
 // GetJWT returns the JWT from the context.
-func GetJWT(c *gin.Context) string {
+func GetJWT(c *gin.Context) *jwt.Token {
 	if v, ok := c.Get(KeyJWT); ok {
-		if jwt, ok := v.(string); ok {
+		if jwt, ok := v.(*jwt.Token); ok {
 			return jwt
-		}
-	}
-	return ""
-}
-
-// GetJWTClaims returns the JWT claims from the context.
-func GetJWTClaims(c *gin.Context) jwt.Claims {
-	if v, ok := c.Get(KeyJWTClaims); ok {
-		if c, ok := v.(jwt.Claims); ok {
-			return c
 		}
 	}
 	return nil

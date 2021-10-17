@@ -28,9 +28,10 @@ const (
 	ErrGeneratePrivateKeyFailureCode         = 1272
 	ErrGenerateCertificateFailureCode        = 1273
 	ErrEncodeFailureCode                     = 1274
-	ErrSignJWTTokenFailureCode               = 3004
-	ErrInvalidJWTTokenSignatureAlgorithmCode = 3005
-	ErrInvalidJWTTokenClaimsCode             = 3006
+	ErrSignJWTTokenFailureCode               = 1275
+	ErrInvalidJWTTokenSignatureAlgorithmCode = 1276
+	ErrInvalidJWTTokenClaimsCode             = 1277
+	ErrParseJWTTokenFailureCode              = 1278
 )
 
 // ErrDecodeFailure occurs when encoded data cannot be decoded.
@@ -589,4 +590,24 @@ func (e *ErrInvalidTokenClaims) Error() string {
 // Code returns the corresponding error code.
 func (e *ErrInvalidTokenClaims) Code() int {
 	return ErrInvalidJWTTokenClaimsCode
+}
+
+// ErrParseJWTTokenFailure occurs when a token cannot be parsed or is invalid.
+type ErrParseJWTTokenFailure struct {
+	Err error
+}
+
+// InternalError returns the internal standard error object if there is one or nil if none is set.
+func (e *ErrParseJWTTokenFailure) InternalError() error {
+	return e.Err
+}
+
+// Error returns the string version of the error.
+func (e *ErrParseJWTTokenFailure) Error() string {
+	return fmt.Sprintf("failed to parse the JWT token: %s", e.Err)
+}
+
+// Code returns the corresponding error code.
+func (e *ErrParseJWTTokenFailure) Code() int {
+	return ErrParseJWTTokenFailureCode
 }
