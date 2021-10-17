@@ -15,8 +15,8 @@ type JWTAuthService interface {
 	// GenerateToken should generate a new JWT token with the given claims and return the encoded JWT token.
 	GenerateToken(jwt.Claims, context.Context) (string, error)
 
-	// ParseToken should parse the token string, returning the claims associated with it.
-	ParseToken(string, context.Context) (jwt.Claims, error)
+	// VerifyToken should parse and verify the token string and return the resulting JWT token for further validation.
+	VerifyToken(string, context.Context) (*jwt.Token, error)
 }
 
 // JWTAuthHMACService creates and validates JWT tokens that are signed with an HMAC256-hashed secret.
@@ -48,8 +48,8 @@ func (j *JWTAuthHMACService) GenerateToken(claims jwt.Claims, ctx context.Contex
 	return signedToken, nil
 }
 
-// ParseToken validates the given token and returns the claims associated with it.
-func (j *JWTAuthHMACService) ParseToken(encodedToken string, ctx context.Context) (jwt.Claims, error) {
+// VerifyToken parses and verifies the token string, returning the resulting JWT token for further validation.
+func (j *JWTAuthHMACService) VerifyToken(encodedToken string, ctx context.Context) (*jwt.Token, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -67,7 +67,7 @@ func (j *JWTAuthHMACService) ParseToken(encodedToken string, ctx context.Context
 	if err != nil {
 		return nil, err
 	}
-	return token.Claims, nil
+	return token, nil
 }
 
 // JWTAuthRSAService creates and validates JWT tokens that are signed with a private RSA key and validated with a
@@ -105,8 +105,8 @@ func (j *JWTAuthRSAService) GenerateToken(claims jwt.Claims, ctx context.Context
 	return signedToken, nil
 }
 
-// ParseToken validates the given token and returns the claims associated with it.
-func (j *JWTAuthRSAService) ParseToken(encodedToken string, ctx context.Context) (jwt.Claims, error) {
+// VerifyToken parses and verifies the token string, returning the resulting JWT token for further validation.
+func (j *JWTAuthRSAService) VerifyToken(encodedToken string, ctx context.Context) (*jwt.Token, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -124,7 +124,7 @@ func (j *JWTAuthRSAService) ParseToken(encodedToken string, ctx context.Context)
 	if err != nil {
 		return nil, err
 	}
-	return token.Claims, nil
+	return token, nil
 }
 
 // JWTAuthECDSAService creates and validates JWT tokens that are signed with a private ECDSA key and validated with a
@@ -162,8 +162,8 @@ func (j *JWTAuthECDSAService) GenerateToken(claims jwt.Claims, ctx context.Conte
 	return signedToken, nil
 }
 
-// ParseToken validates the given token and returns the claims associated with it.
-func (j *JWTAuthECDSAService) ParseToken(encodedToken string, ctx context.Context) (jwt.Claims, error) {
+// VerifyToken parses and verifies the token string, returning the resulting JWT token for further validation.
+func (j *JWTAuthECDSAService) VerifyToken(encodedToken string, ctx context.Context) (*jwt.Token, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -181,5 +181,5 @@ func (j *JWTAuthECDSAService) ParseToken(encodedToken string, ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	return token.Claims, nil
+	return token, nil
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
 )

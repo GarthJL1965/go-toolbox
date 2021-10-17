@@ -29,7 +29,7 @@ var (
 )
 
 // JWTAuthHandler is an app-specific function that is used to verify authentication or authorization.
-type JWTAuthHandler func(*gin.Context, jwt.Claims) (bool, error)
+type JWTAuthHandler func(*gin.Context, *jwt.Token) (bool, error)
 
 // JWTCreateAuthServiceHandler is an app-specific function that is used for creating the auth service required for
 // JWT validation.
@@ -90,7 +90,7 @@ type JWTAuthOptions struct {
 //  ◽ Token is missing from the request: jwt-missing-auth-token
 //  ◽ Calling application failed to define a handler for creating the auth service: jwt-no-auth-service-defined
 //  ◽ Failure while creating the auth service: jwt-create-auth-service-failed
-//  ◽ Token validation fails: jwt-validation-failed
+//  ◽ Token verification fails: jwt-verify-token-failed
 //  ◽ Error returned by authentication handler: jwt-authentication-failed
 //  ◽ Caller is not authenticated: jwt-not-authenticated
 //  ◽ Error returned by authorization handler: jwt-authorization-failed
@@ -101,7 +101,7 @@ type JWTAuthOptions struct {
 //  ◽ Token is missing from the request: 401
 //  ◽ Calling application failed to define a handler for creating the auth service: 401
 //  ◽ Failure while creating the auth service: 401
-//  ◽ Token validation fails: 401
+//  ◽ Token verification fails: 401
 //  ◽ Error returned by authentication handler: 401
 //  ◽ Caller is not authenticated: 401
 //  ◽ Error returned by authorization handler: 403
@@ -157,12 +157,12 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 			return
 		}
-		claims, err := authService.ParseToken(tokenString, ctx)
+		token, err := authService.VerifyToken(tokenString, ctx)
 		if err != nil {
-			errorCode := "jwt-parse-failed"
+			errorCode := "jwt-verify-token-failed"
 			c.Header(JWTAuthErrorCodeHeader, errorCode)
 			c.Header(JWTAuthErrorMessageHeader, err.Error())
-			logger.Error().Err(err).Msgf("failed to parse JWT token: %s", err.Error())
+			logger.Error().Err(err).Msgf("failed to verify JWT token: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusUnauthorized)
 			} else if options.ErrorHandler(c, errorCode, err) {
@@ -171,7 +171,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			return
 		}
 		if options.AuthnHandler != nil {
-			authenticated, err := options.AuthnHandler(c, claims)
+			authenticated, err := options.AuthnHandler(c, token)
 			if err != nil {
 				errorCode := "jwt-authentication-failed"
 				c.Header(JWTAuthErrorCodeHeader, errorCode)
@@ -197,7 +197,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 		}
 		if options.AuthzHandler != nil {
-			authorized, err := options.AuthnHandler(c, claims)
+			authorized, err := options.AuthnHandler(c, token)
 			if err != nil {
 				errorCode := "jwt-authorized-failed"
 				c.Header(JWTAuthErrorCodeHeader, errorCode)
@@ -224,8 +224,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 		}
 
 		// store the token and claims
-		c.Set(tbcontext.KeyJWT, tokenString)
-		c.Set(tbcontext.KeyJWTClaims, claims)
+		c.Set(tbcontext.KeyJWT, token)
 		if options.SaveToCookie {
 			c.SetCookie(options.Cookie.Name, tokenString, int(options.Cookie.MaxAge.Seconds()), options.Cookie.Path,
 				options.Cookie.Domain, options.Cookie.Secure, options.Cookie.HttpOnly)
