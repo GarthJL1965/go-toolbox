@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"go.imperva.dev/toolbox/crypto"
 	tbcontext "go.imperva.dev/toolbox/gin/context"
 )
@@ -28,11 +29,11 @@ var (
 )
 
 // JWTAuthHandler is an app-specific function that is used to verify authentication or authorization.
-type JWTAuthHandler func(*gin.Context, *crypto.JWTClaims, context.Context) (bool, error)
+type JWTAuthHandler func(*gin.Context, jwt.Claims) (bool, error)
 
 // JWTCreateAuthServiceHandler is an app-specific function that is used for creating the auth service required for
 // JWT validation.
-type JWTCreateAuthServiceHandler func(*gin.Context, string, context.Context) (crypto.JWTAuthService, error)
+type JWTCreateAuthServiceHandler func(*gin.Context, string) (crypto.JWTAuthService, error)
 
 // JWTAuthOptions holds the options for configuring the JWTAuth middleware.
 type JWTAuthOptions struct {
@@ -143,7 +144,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 			return
 		}
-		authService, err := options.CreateAuthServiceHandler(c, tokenString, ctx)
+		authService, err := options.CreateAuthServiceHandler(c, tokenString)
 		if err != nil {
 			errorCode := "jwt-create-auth-service-failed"
 			c.Header(JWTAuthErrorCodeHeader, errorCode)
@@ -156,12 +157,12 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 			return
 		}
-		claims, err := authService.ValidateToken(tokenString, ctx)
+		claims, err := authService.ParseToken(tokenString, ctx)
 		if err != nil {
-			errorCode := "jwt-validation-failed"
+			errorCode := "jwt-parse-failed"
 			c.Header(JWTAuthErrorCodeHeader, errorCode)
 			c.Header(JWTAuthErrorMessageHeader, err.Error())
-			logger.Error().Err(err).Msgf("failed to validate JWT token: %s", err.Error())
+			logger.Error().Err(err).Msgf("failed to parse JWT token: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusUnauthorized)
 			} else if options.ErrorHandler(c, errorCode, err) {
@@ -170,7 +171,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			return
 		}
 		if options.AuthnHandler != nil {
-			authenticated, err := options.AuthnHandler(c, claims, ctx)
+			authenticated, err := options.AuthnHandler(c, claims)
 			if err != nil {
 				errorCode := "jwt-authentication-failed"
 				c.Header(JWTAuthErrorCodeHeader, errorCode)
@@ -196,7 +197,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 		}
 		if options.AuthzHandler != nil {
-			authorized, err := options.AuthnHandler(c, claims, ctx)
+			authorized, err := options.AuthnHandler(c, claims)
 			if err != nil {
 				errorCode := "jwt-authorized-failed"
 				c.Header(JWTAuthErrorCodeHeader, errorCode)

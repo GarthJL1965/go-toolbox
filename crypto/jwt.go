@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rsa"
-	"errors"
 
 	"github.com/golang-jwt/jwt/v4"
 	"go.imperva.dev/zerolog"
@@ -14,21 +13,10 @@ import (
 // JWTAuthService represents any object that is able to generate new JWT tokens and also validate them.
 type JWTAuthService interface {
 	// GenerateToken should generate a new JWT token with the given claims and return the encoded JWT token.
-	GenerateToken(JWTClaims, context.Context) (string, error)
+	GenerateToken(jwt.Claims, context.Context) (string, error)
 
-	// ValidateToken should parse the token string and ensure it is valid, returning the claims associated with it.
-	ValidateToken(string, context.Context) (*JWTClaims, error)
-}
-
-// JWTClaims holds standard JWT claims in addition to any application-specific claims.
-type JWTClaims struct {
-	jwt.StandardClaims
-	AppClaims map[string]interface{}
-}
-
-// Valid returns whether or not the standard claims are valid.
-func (j JWTClaims) Valid() error {
-	return j.StandardClaims.Valid()
+	// ParseToken should parse the token string, returning the claims associated with it.
+	ParseToken(string, context.Context) (jwt.Claims, error)
 }
 
 // JWTAuthHMACService creates and validates JWT tokens that are signed with an HMAC256-hashed secret.
@@ -44,7 +32,7 @@ func NewJWTAuthHMACService(secret []byte) *JWTAuthHMACService {
 }
 
 // GenerateToken generates a new JWT token with the given claims.
-func (j *JWTAuthHMACService) GenerateToken(claims JWTClaims, ctx context.Context) (string, error) {
+func (j *JWTAuthHMACService) GenerateToken(claims jwt.Claims, ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -60,8 +48,8 @@ func (j *JWTAuthHMACService) GenerateToken(claims JWTClaims, ctx context.Context
 	return signedToken, nil
 }
 
-// ValidateToken validates the given token and returns the claims associated with it.
-func (j *JWTAuthHMACService) ValidateToken(encodedToken string, ctx context.Context) (*JWTClaims, error) {
+// ParseToken validates the given token and returns the claims associated with it.
+func (j *JWTAuthHMACService) ParseToken(encodedToken string, ctx context.Context) (jwt.Claims, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -79,15 +67,7 @@ func (j *JWTAuthHMACService) ValidateToken(encodedToken string, ctx context.Cont
 	if err != nil {
 		return nil, err
 	}
-
-	// extract the claims
-	claims, ok := token.Claims.(*JWTClaims)
-	if !ok {
-		e := &ErrInvalidTokenClaims{Err: errors.New("claims are not in the expected format")}
-		logger.Error().Err(e.Err).Msg(e.Error())
-		return nil, e
-	}
-	return claims, nil
+	return token.Claims, nil
 }
 
 // JWTAuthRSAService creates and validates JWT tokens that are signed with a private RSA key and validated with a
@@ -109,7 +89,7 @@ func NewJWTAuthRSAService(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) 
 }
 
 // GenerateToken generates a new JWT token with the given claims.
-func (j *JWTAuthRSAService) GenerateToken(claims JWTClaims, ctx context.Context) (string, error) {
+func (j *JWTAuthRSAService) GenerateToken(claims jwt.Claims, ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -125,8 +105,8 @@ func (j *JWTAuthRSAService) GenerateToken(claims JWTClaims, ctx context.Context)
 	return signedToken, nil
 }
 
-// ValidateToken validates the given token and returns the claims associated with it.
-func (j *JWTAuthRSAService) ValidateToken(encodedToken string, ctx context.Context) (*JWTClaims, error) {
+// ParseToken validates the given token and returns the claims associated with it.
+func (j *JWTAuthRSAService) ParseToken(encodedToken string, ctx context.Context) (jwt.Claims, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -144,15 +124,7 @@ func (j *JWTAuthRSAService) ValidateToken(encodedToken string, ctx context.Conte
 	if err != nil {
 		return nil, err
 	}
-
-	// extract the claims
-	claims, ok := token.Claims.(*JWTClaims)
-	if !ok {
-		e := &ErrInvalidTokenClaims{Err: errors.New("claims are not in the expected format")}
-		logger.Error().Err(e.Err).Msg(e.Error())
-		return nil, e
-	}
-	return claims, nil
+	return token.Claims, nil
 }
 
 // JWTAuthECDSAService creates and validates JWT tokens that are signed with a private ECDSA key and validated with a
@@ -174,7 +146,7 @@ func NewJWTAuthECDSAService(publicKey *ecdsa.PublicKey, privateKey *ecdsa.Privat
 }
 
 // GenerateToken generates a new JWT token with the given claims.
-func (j *JWTAuthECDSAService) GenerateToken(claims JWTClaims, ctx context.Context) (string, error) {
+func (j *JWTAuthECDSAService) GenerateToken(claims jwt.Claims, ctx context.Context) (string, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -190,8 +162,8 @@ func (j *JWTAuthECDSAService) GenerateToken(claims JWTClaims, ctx context.Contex
 	return signedToken, nil
 }
 
-// ValidateToken validates the given token and returns the claims associated with it.
-func (j *JWTAuthECDSAService) ValidateToken(encodedToken string, ctx context.Context) (*JWTClaims, error) {
+// ParseToken validates the given token and returns the claims associated with it.
+func (j *JWTAuthECDSAService) ParseToken(encodedToken string, ctx context.Context) (jwt.Claims, error) {
 	logger := log.Logger
 	if l := zerolog.Ctx(ctx); l != nil {
 		logger = *l
@@ -209,13 +181,5 @@ func (j *JWTAuthECDSAService) ValidateToken(encodedToken string, ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-
-	// extract the claims
-	claims, ok := token.Claims.(*JWTClaims)
-	if !ok {
-		e := &ErrInvalidTokenClaims{Err: errors.New("claims are not in the expected format")}
-		logger.Error().Err(e.Err).Msg(e.Error())
-		return nil, e
-	}
-	return claims, nil
+	return token.Claims, nil
 }

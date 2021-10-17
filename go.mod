@@ -10,6 +10,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-redis/redis/v8 v8.3.4
 	github.com/go-redis/redis_rate/v9 v9.1.1
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/google/uuid v1.1.2
 	github.com/ip2location/ip2location-go/v9 v9.1.0

@@ -8,11 +8,17 @@ and utilizes [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0
 
 No unreleased changes
 
-## v0.3.3 (2021-10-16)
+## v0.3.4 (2021-10-16)
 
+## Features
+
+* Added `extraFields` to Logger middleware for logging additional context values for each request.
+  
 ## Enhancements
 
 * Modified JWT auth middleware to utilize `JWTCreateAuthServiceHandler` for creating the JWT auth service for token validation.
+* Removed log context parameters from `JWTAuthHandler`.
+* Modified JWT crypto functions to use standard `jwt.Claims` objects.
 
 ## v0.3.1 (2021-10-02)
 

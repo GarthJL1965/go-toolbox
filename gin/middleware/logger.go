@@ -18,7 +18,7 @@ import (
 //
 // Be sure to include the RequestID middleware before including this middleware so that a unique request ID is
 // written to log messages associated with the current gin context.
-func Logger(excludeRequests ExcludeHTTPRequests) gin.HandlerFunc {
+func Logger(excludeRequests ExcludeHTTPRequests, extraFields ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// do not bother logging anything if the method/path are ignored
 		if excludeRequestFromLog(c.Request, excludeRequests) {
@@ -45,7 +45,7 @@ func Logger(excludeRequests ExcludeHTTPRequests) gin.HandlerFunc {
 		} else if status >= http.StatusInternalServerError {
 			level = zerolog.ErrorLevel
 		}
-		logger.WithLevel(level).
+		event := logger.WithLevel(level).
 			Int("status", status).
 			Str("method", c.Request.Method).
 			Dur("latency", end.Sub(start)).
@@ -54,8 +54,13 @@ func Logger(excludeRequests ExcludeHTTPRequests) gin.HandlerFunc {
 			Str("client_ip", c.ClientIP()).
 			Str("x_forwarded_for", c.Request.Header.Get("X-Forwarded-For")).
 			Str("query", c.Request.URL.RawQuery).
-			Str("request_id", context.GetRequestID(c)).
-			Msgf("%d %s %s", status, c.Request.Method, c.Request.URL.Path)
+			Str("request_id", context.GetRequestID(c))
+		for _, field := range extraFields {
+			if v, ok := c.Get(field); ok {
+				event = event.Interface(field, v)
+			}
+		}
+		event.Msgf("%d %s %s", status, c.Request.Method, c.Request.URL.Path)
 	}
 }
 

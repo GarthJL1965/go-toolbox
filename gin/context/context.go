@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
-	"go.imperva.dev/toolbox/crypto"
+	"github.com/golang-jwt/jwt"
 	"go.imperva.dev/zerolog"
 	"go.imperva.dev/zerolog/log"
 )
@@ -64,9 +64,9 @@ func GetJWT(c *gin.Context) string {
 }
 
 // GetJWTClaims returns the JWT claims from the context.
-func GetJWTClaims(c *gin.Context) *crypto.JWTClaims {
+func GetJWTClaims(c *gin.Context) jwt.Claims {
 	if v, ok := c.Get(KeyJWTClaims); ok {
-		if c, ok := v.(*crypto.JWTClaims); ok {
+		if c, ok := v.(jwt.Claims); ok {
 			return c
 		}
 	}
