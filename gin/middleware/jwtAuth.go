@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"go.imperva.dev/toolbox/crypto"
 	tbcontext "go.imperva.dev/toolbox/gin/context"
 )
