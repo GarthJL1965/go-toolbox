@@ -8,6 +8,16 @@ and utilizes [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0
 
 No unreleased changes
 
+## v0.3.8 (2021-10-18)
+
+## Fixes
+
+* Fixed multiple bugs with middleware error headers being set incorrectly or not at all.
+
+## Enhancements
+
+* Enhanced all middleware options to accept the ability to enable or disable error headers.
+
 ## v0.3.7 (2021-10-17)
 
 ## Features

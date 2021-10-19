@@ -10,22 +10,19 @@ import (
 	tbcontext "go.imperva.dev/toolbox/gin/context"
 )
 
-var (
-	// SessionErrorCodeHeader is the name of the header in which to save the specific error "code" (which is a
-	// short string) if the middleware fails.
-	SessionErrorCodeHeader = "X-Request-Error-Code"
-
-	// SessionErrorMessageHeader is the name of the header in which to save the error message returned by a
-	// middleware failure.
-	SessionErrorMessageHeader = "X-Request-Error-Message"
-)
-
 // RedisSessionOptions holds the options for configuring the RedisSession middleware.
 type RedisSessionOptions struct {
 	// Client points to the Redis client object.
 	//
 	// This field must NOT be nil.
 	Client *redis.Client
+
+	// EnableErrorCodeHeader indicates whether or not to set the custom X-*-Error-Code header if an error occurs.
+	EnableErrorCodeHeader bool
+
+	// EnableErrorMessageHeader indicates whether or not to set the custom X-*-Error-Message header if an error
+	// occurs.
+	EnableErrorMessageHeader bool
 
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
@@ -43,6 +40,26 @@ type RedisSessionOptions struct {
 
 	// TTL indicates the length session data will be stored before it expires.
 	TTL time.Duration
+}
+
+// GetErrorCodeHeader returns the name of the X header to use for holding the middleware's error code.
+func (o RedisSessionOptions) GetErrorCodeHeader() string {
+	return "X-Redis-Session-Error-Code"
+}
+
+// GetErrorMessageHeader returns the name of the X header to use for holding the middleware's error message.
+func (o RedisSessionOptions) GetErrorMessageHeader() string {
+	return "X-Redis-Session-Error-Message"
+}
+
+// SetErrorCodeHeader returns whether or not to set the error code header when an error occurs.
+func (o RedisSessionOptions) SetErrorCodeHeader() bool {
+	return o.EnableErrorCodeHeader
+}
+
+// SetErrorMessageHeader returns whether or not to set the error code message when an error occurs.
+func (o RedisSessionOptions) SetErrorMessageHeader() bool {
+	return o.EnableErrorMessageHeader
 }
 
 // RedisSession uses a Redis backend to store session information.
@@ -80,8 +97,7 @@ func RedisSession(options RedisSessionOptions) gin.HandlerFunc {
 		id, err := options.SessionIDLookupHandler(c)
 		if err != nil {
 			errorCode := "get-session-id-failure"
-			c.Set(RateLimitErrorCodeHeader, errorCode)
-			c.Set(RateLimitErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("failed to retrieve session ID: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusInternalServerError)
@@ -97,8 +113,7 @@ func RedisSession(options RedisSessionOptions) gin.HandlerFunc {
 			result = "{}"
 		} else if err != redis.Nil {
 			errorCode := "get-session-data-failure"
-			c.Set(RateLimitErrorCodeHeader, errorCode)
-			c.Set(RateLimitErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("failed to retrieve session data: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusInternalServerError)
@@ -127,8 +142,7 @@ func RedisSession(options RedisSessionOptions) gin.HandlerFunc {
 		// save updated session data back to Redis
 		if err := options.Client.Set(context.Background(), id, data, options.TTL).Err(); err != nil {
 			errorCode := "store-session-data-failure"
-			c.Set(RateLimitErrorCodeHeader, errorCode)
-			c.Set(RateLimitErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("failed to store session data: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusInternalServerError)

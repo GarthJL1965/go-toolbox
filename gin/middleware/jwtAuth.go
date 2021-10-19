@@ -13,14 +13,6 @@ import (
 )
 
 var (
-	// JWTAuthErrorCodeHeader is the name of the header in which to save the specific error "code" (which is a
-	// short string) if JWT validation/authentication/authorization fails.
-	JWTAuthErrorCodeHeader = "X-Request-Error-Code"
-
-	// JWTAuthErrorMessageHeader is the name of the header in which to save the error message returned by the failure
-	// during JWT validation/authentication/authorization.
-	JWTAuthErrorMessageHeader = "X-Request-Error-Message"
-
 	// JWTAuthHeader defines the name of the header holding the JWT authorization info.
 	JWTAuthHeader = "Authorization"
 
@@ -65,11 +57,38 @@ type JWTAuthOptions struct {
 		HttpOnly bool
 	}
 
+	// EnableErrorCodeHeader indicates whether or not to set the custom X-*-Error-Code header if an error occurs.
+	EnableErrorCodeHeader bool
+
+	// EnableErrorMessageHeader indicates whether or not to set the custom X-*-Error-Message header if an error
+	// occurs.
+	EnableErrorMessageHeader bool
+
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
 
 	// SaveToCookie indicates whether or not to save the JWT token to a cookie.
 	SaveToCookie bool
+}
+
+// GetErrorCodeHeader returns the name of the X header to use for holding the middleware's error code.
+func (o JWTAuthOptions) GetErrorCodeHeader() string {
+	return "X-JWT-Auth-Error-Code"
+}
+
+// GetErrorMessageHeader returns the name of the X header to use for holding the middleware's error message.
+func (o JWTAuthOptions) GetErrorMessageHeader() string {
+	return "X-JWT-Auth-Error-Message"
+}
+
+// SetErrorCodeHeader returns whether or not to set the error code header when an error occurs.
+func (o JWTAuthOptions) SetErrorCodeHeader() bool {
+	return o.EnableErrorCodeHeader
+}
+
+// SetErrorMessageHeader returns whether or not to set the error code message when an error occurs.
+func (o JWTAuthOptions) SetErrorMessageHeader() bool {
+	return o.EnableErrorMessageHeader
 }
 
 // JWTAuth is a middleware function for authenticating and authorizing a caller via a JWT.
@@ -116,8 +135,8 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 		length := len(JWTAuthTokenType) + 1
 		if len(authHeader) <= length {
 			errorCode := "jwt-missing-auth-token"
-			c.Header(JWTAuthErrorCodeHeader, errorCode)
 			err := errors.New("authentication token is missing from request")
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msg(err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusUnauthorized)
@@ -129,8 +148,8 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 		tokenString := authHeader[length:]
 		if options.AuthService == nil {
 			errorCode := "jwt-no-auth-service-defined"
-			c.Header(JWTAuthErrorCodeHeader, errorCode)
 			err := errors.New("no auth service for token verification was defined")
+			setErrorHeaders(c, options, errorCode, err)
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusUnauthorized)
 			} else if options.ErrorHandler(c, errorCode, err) {
@@ -141,8 +160,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 		token, err := options.AuthService.VerifyToken(tokenString, ctx)
 		if err != nil {
 			errorCode := "jwt-verify-token-failed"
-			c.Header(JWTAuthErrorCodeHeader, errorCode)
-			c.Header(JWTAuthErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("failed to verify JWT token: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusUnauthorized)
@@ -155,8 +173,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			authenticated, err := options.AuthnHandler(c, token)
 			if err != nil {
 				errorCode := "jwt-authentication-failed"
-				c.Header(JWTAuthErrorCodeHeader, errorCode)
-				c.Header(JWTAuthErrorMessageHeader, err.Error())
+				setErrorHeaders(c, options, errorCode, err)
 				logger.Error().Err(err).Msgf("failed to authenticate JWT token: %s", err.Error())
 				if options.ErrorHandler == nil {
 					c.AbortWithStatus(http.StatusUnauthorized)
@@ -167,7 +184,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 			if !authenticated {
 				errorCode := "jwt-not-authenticated"
-				c.Header(JWTAuthErrorCodeHeader, errorCode)
+				setErrorHeaders(c, options, errorCode, errors.New("JWT token is not authenticated"))
 				logger.Warn().Msg("JWT token is not authenticated")
 				if options.ErrorHandler == nil {
 					c.AbortWithStatus(http.StatusUnauthorized)
@@ -181,8 +198,7 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			authorized, err := options.AuthnHandler(c, token)
 			if err != nil {
 				errorCode := "jwt-authorized-failed"
-				c.Header(JWTAuthErrorCodeHeader, errorCode)
-				c.Header(JWTAuthErrorMessageHeader, err.Error())
+				setErrorHeaders(c, options, errorCode, err)
 				logger.Error().Err(err).Msgf("failed to authorize JWT token: %s", err.Error())
 				if options.ErrorHandler == nil {
 					c.AbortWithStatus(http.StatusForbidden)
@@ -193,7 +209,8 @@ func JWTAuth(options JWTAuthOptions) gin.HandlerFunc {
 			}
 			if !authorized {
 				errorCode := "jwt-not-authorized"
-				c.Header(JWTAuthErrorCodeHeader, errorCode)
+				setErrorHeaders(c, options, errorCode,
+					errors.New("JWT token is not authorized to perform the request"))
 				logger.Warn().Msg("JWT token is not authorized to perform the request")
 				if options.ErrorHandler == nil {
 					c.AbortWithStatus(http.StatusForbidden)

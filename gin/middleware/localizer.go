@@ -10,16 +10,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-var (
-	// LocalizerErrorCodeHeader is the name of the header in which to save the specific error "code" (which is a
-	// short string) if the middleware fails.
-	LocalizerErrorCodeHeader = "X-Request-Error-Code"
-
-	// LocalizerErrorMessageHeader is the name of the header in which to save the error message returned by a
-	// middleware failure.
-	LocalizerErrorMessageHeader = "X-Request-Error-Message"
-)
-
 // LocalizerOptions holds the options for configuring the Localizer middleware.
 type LocalizerOptions struct {
 	// Translator is the main translation object which stores the list of supported languages.
@@ -27,8 +17,35 @@ type LocalizerOptions struct {
 	// This field must NOT be nil.
 	Translator *i18n.UniversalTranslator
 
+	// EnableErrorCodeHeader indicates whether or not to set the custom X-*-Error-Code header if an error occurs.
+	EnableErrorCodeHeader bool
+
+	// EnableErrorMessageHeader indicates whether or not to set the custom X-*-Error-Message header if an error
+	// occurs.
+	EnableErrorMessageHeader bool
+
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
+}
+
+// GetErrorCodeHeader returns the name of the X header to use for holding the middleware's error code.
+func (o LocalizerOptions) GetErrorCodeHeader() string {
+	return "X-Localizer-Error-Code"
+}
+
+// GetErrorMessageHeader returns the name of the X header to use for holding the middleware's error message.
+func (o LocalizerOptions) GetErrorMessageHeader() string {
+	return "X-Localizer-Limiter-Error-Message"
+}
+
+// SetErrorCodeHeader returns whether or not to set the error code header when an error occurs.
+func (o LocalizerOptions) SetErrorCodeHeader() bool {
+	return o.EnableErrorCodeHeader
+}
+
+// SetErrorMessageHeader returns whether or not to set the error code message when an error occurs.
+func (o LocalizerOptions) SetErrorMessageHeader() bool {
+	return o.EnableErrorMessageHeader
 }
 
 // Localizer reads the "lang" query parameter and the Accept-Language header to determine which language translation
@@ -65,8 +82,7 @@ func Localizer(options LocalizerOptions) gin.HandlerFunc {
 		tags, _, err := language.ParseAcceptLanguage(c.Request.Header.Get("Accept-Language"))
 		if err != nil {
 			errorCode := "parse-accept-language-failure"
-			c.Set(LocalizerErrorCodeHeader, errorCode)
-			c.Set(LocalizerErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("failed to parse Accept-Language header: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusInternalServerError)

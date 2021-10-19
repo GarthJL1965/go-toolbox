@@ -23,7 +23,7 @@ func RequestID() gin.HandlerFunc {
 		} else {
 			c.Set(context.KeyRequestID, id.String())
 		}
-		c.Set(RequestIDHeader, id)
+		c.Header(RequestIDHeader, id.String())
 		c.Next()
 	}
 }

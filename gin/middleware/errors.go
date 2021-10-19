@@ -42,3 +42,13 @@ func (e *ErrLoadIPLocationDB) Error() string {
 func (e *ErrLoadIPLocationDB) Code() int {
 	return ErrLoadIPLocationDBCode
 }
+
+// setErrorHeaders is used to set error headers for the context when middleware fails.
+func setErrorHeaders(c *gin.Context, m middlewareOptions, code string, err error) {
+	if m.SetErrorCodeHeader() {
+		c.Header(m.GetErrorCodeHeader(), code)
+	}
+	if m.SetErrorMessageHeader() {
+		c.Header(m.GetErrorCodeHeader(), err.Error())
+	}
+}

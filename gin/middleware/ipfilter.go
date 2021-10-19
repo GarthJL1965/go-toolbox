@@ -11,16 +11,6 @@ import (
 	"go.imperva.dev/zerolog/log"
 )
 
-var (
-	// IPFilterErrorCodeHeader is the name of the header in which to save the specific error "code" (which is a
-	// short string) if the middleware fails.
-	IPFilterErrorCodeHeader = "X-Request-Error-Code"
-
-	// IPFilterErrorMessageHeader is the name of the header in which to save the error message returned by a
-	// middleware failure.
-	IPFilterErrorMessageHeader = "X-Request-Error-Message"
-)
-
 // IPAddressRecord holds detailed information about an IP address.
 type IPAddressRecord struct {
 	// Address is the IP address.
@@ -39,6 +29,13 @@ type IPFilterOptions struct {
 	//
 	// If this field is nil, the given context's ClientIP() function is used.
 	ClientIPLookupHandler func(*gin.Context) (string, error)
+
+	// EnableErrorCodeHeader indicates whether or not to set the custom X-*-Error-Code header if an error occurs.
+	EnableErrorCodeHeader bool
+
+	// EnableErrorMessageHeader indicates whether or not to set the custom X-*-Error-Message header if an error
+	// occurs.
+	EnableErrorMessageHeader bool
 
 	// IPDBHandle is the handle to the IP location database used for lookups.
 	//
@@ -62,6 +59,26 @@ type IPFilterOptions struct {
 
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
+}
+
+// GetErrorCodeHeader returns the name of the X header to use for holding the middleware's error code.
+func (o IPFilterOptions) GetErrorCodeHeader() string {
+	return "X-IP-Filter-Error-Code"
+}
+
+// GetErrorMessageHeader returns the name of the X header to use for holding the middleware's error message.
+func (o IPFilterOptions) GetErrorMessageHeader() string {
+	return "X-IP-Filter-Error-Message"
+}
+
+// SetErrorCodeHeader returns whether or not to set the error code header when an error occurs.
+func (o IPFilterOptions) SetErrorCodeHeader() bool {
+	return o.EnableErrorCodeHeader
+}
+
+// SetErrorMessageHeader returns whether or not to set the error code message when an error occurs.
+func (o IPFilterOptions) SetErrorMessageHeader() bool {
+	return o.EnableErrorMessageHeader
 }
 
 // IPFilter determines whether or not a client making a request to the server has been blacklisted and should be
@@ -100,8 +117,7 @@ func IPFilter(options IPFilterOptions) gin.HandlerFunc {
 			ip, err := options.ClientIPLookupHandler(c)
 			if err != nil {
 				errorCode := "client-ip-lookup-failure"
-				c.Set(LocalizerErrorCodeHeader, errorCode)
-				c.Set(LocalizerErrorMessageHeader, err.Error())
+				setErrorHeaders(c, options, errorCode, err)
 				logger.Error().Err(err).Msgf("failed to obtain client IP address: %s", err.Error())
 				if options.ErrorHandler == nil {
 					c.AbortWithStatus(http.StatusInternalServerError)
@@ -118,8 +134,7 @@ func IPFilter(options IPFilterOptions) gin.HandlerFunc {
 		results, err := options.IPDBHandle.Get_all(clientIP)
 		if err != nil {
 			errorCode := "ip-location-lookup-failure"
-			c.Set(LocalizerErrorCodeHeader, errorCode)
-			c.Set(LocalizerErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("failed to retrieve client IP location information: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusInternalServerError)

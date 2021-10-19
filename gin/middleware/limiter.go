@@ -14,19 +14,11 @@ import (
 )
 
 var (
-	// RateLimitErrorCodeHeader is the name of the header in which to save the specific error "code" (which is a
-	// short string) if the limiter fails or the caller is rate limited.
-	RateLimitErrorCodeHeader = "X-Request-Error-Code"
-
-	// RateLimitErrorMessageHeader is the name of the header in which to save the error message returned by the
-	// failure while determining whether or not to allow the connection or if the caller is rate limited.
-	RateLimitErrorMessageHeader = "X-Request-Error-Message"
-
 	// RateLimitRemainingHeader is the header in which to store remaining rate limit information.
-	RedisRateLimitRemainingHeader = "X-RateLimit-Remaining"
+	RedisRateLimitRemainingHeader = "X-Redis-Rate-Limiter-Remaining"
 
 	// RateLimitRetryAfterHeader is the header in which to store retry information.
-	RedisRateLimitRetryAfterHeader = "X-RateLimit-Retry-After"
+	RedisRateLimitRetryAfterHeader = "X-Redis-Rate-Limiter-Retry-After"
 )
 
 // RedisRateLimiterOptions holds the options for configuring the RedisRateLimiter middleware.
@@ -35,6 +27,13 @@ type RedisRateLimiterOptions struct {
 	//
 	// This field must NOT be nil.
 	Client *redis.Client
+
+	// EnableErrorCodeHeader indicates whether or not to set the custom X-*-Error-Code header if an error occurs.
+	EnableErrorCodeHeader bool
+
+	// EnableErrorMessageHeader indicates whether or not to set the custom X-*-Error-Message header if an error
+	// occurs.
+	EnableErrorMessageHeader bool
 
 	// ErrorHandler is called if an error occurs while executing the middleware.
 	ErrorHandler ErrorHandler
@@ -49,6 +48,26 @@ type RedisRateLimiterOptions struct {
 	//
 	// This field must NOT be nil.
 	Rate redisrate.Limit
+}
+
+// GetErrorCodeHeader returns the name of the X header to use for holding the middleware's error code.
+func (o RedisRateLimiterOptions) GetErrorCodeHeader() string {
+	return "X-Redis-Rate-Limiter-Error-Code"
+}
+
+// GetErrorMessageHeader returns the name of the X header to use for holding the middleware's error message.
+func (o RedisRateLimiterOptions) GetErrorMessageHeader() string {
+	return "X-Redis-Rate-Limiter-Error-Message"
+}
+
+// SetErrorCodeHeader returns whether or not to set the error code header when an error occurs.
+func (o RedisRateLimiterOptions) SetErrorCodeHeader() bool {
+	return o.EnableErrorCodeHeader
+}
+
+// SetErrorMessageHeader returns whether or not to set the error code message when an error occurs.
+func (o RedisRateLimiterOptions) SetErrorMessageHeader() bool {
+	return o.EnableErrorMessageHeader
 }
 
 // RedisRateLimiter uses a Redis backend to enforce request rate limits.
@@ -82,8 +101,7 @@ func RedisRateLimiter(options RedisRateLimiterOptions) gin.HandlerFunc {
 		result, err := limiter.Allow(context.Background(), key, options.Rate)
 		if err != nil {
 			errorCode := "rate-limiter-failure"
-			c.Set(RateLimitErrorCodeHeader, errorCode)
-			c.Set(RateLimitErrorMessageHeader, err.Error())
+			setErrorHeaders(c, options, errorCode, err)
 			logger.Error().Err(err).Msgf("rate limiter failure: %s", err.Error())
 			if options.ErrorHandler == nil {
 				c.AbortWithStatus(http.StatusInternalServerError)
@@ -98,9 +116,8 @@ func RedisRateLimiter(options RedisRateLimiterOptions) gin.HandlerFunc {
 		if result.Allowed == 0 {
 			errorCode := "rate-limited"
 			seconds := int(result.RetryAfter / time.Second)
-			c.Set(RateLimitErrorCodeHeader, errorCode)
-			c.Set(RateLimitErrorMessageHeader,
-				fmt.Sprintf("rate limit has been reached; retry in %d second(s)", seconds))
+			setErrorHeaders(c, options, errorCode,
+				fmt.Errorf("rate limit has been reached; retry in %d second(s)", seconds))
 			c.Set(RedisRateLimitRetryAfterHeader, strconv.Itoa(seconds))
 			logger.Warn().Msg("rate limit has been reached")
 			if options.ErrorHandler == nil {
